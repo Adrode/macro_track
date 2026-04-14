@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: macro_track
+    environment:
+      POSTGRES_USER: macro_track_user
+      POSTGRES_PASSWORD: macro_track_passwd
+      POSTGRES_DB: macro_track_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - macro_track_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  macro_track_data:
