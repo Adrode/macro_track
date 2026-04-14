@@ -1,1 +1,55 @@
-Na pewno będę potrzebował endpointu który zwraca całą listę produktów (tutaj też trzeba będzie to podzielić na kategorie według makro), na pewno taki który zwróci listę posiłków jakie ma skomponowane dany user, na pewno endpoint który będzie robił post do tabeli z posiłkami gdzie user sam sobie wybiera produkt i jego gramaturę i na tej podstawie to leci do bazy (tu do rozkminy jak to sensownie umieścić w bazie), na pewno jakieś odnośnie usera (zrobię JWT access + refresh, więc dla danego usera), meal entries nie miałem wcześniej w głowie więc to do rozkminy 
+**Tabele**:
+- Users
+  - id
+  - email
+  - username
+  - hashed_password
+  - weight
+  - height
+  - kcal_daily_goal
+  - proteing_daily_goal
+  - fat_daily_goal
+  - carbs_daily_goal
+- Products
+  - id
+  - category (protein, fat, carb)
+  - name
+  - kcal_per_100g
+  - protein_per_100g
+  - fat_per_100g
+  - carbs_per_100g
+- Meals
+  - id
+  - category (breakfast, lunch, dinner, supper)
+  - name
+  - user_id (Users.id)
+- MealsProducts
+  - id
+  - meal_id (Meals.id)
+  - product_id (Products.id)
+  - grams
+- UsersDiary
+  - id
+  - user_id (Users.id)
+  - meal (Meals.id)
+  - meal_datetime
+---
+**Endpointy**:
+- /users:
+  - /me - email, usernamem, weight, height, kcal, itd.
+    - podstawowe info
+  - patch /me - aktualizacja weight, height, kcal, macros
+- /products:
+  - /{id} - podstawowe dane produktu o danym id
+  - / - wszystkie produkty, podstawowe dane
+- /meals (tutaj będzie Dependency do current usera):
+  - post / - stworzenie meala
+  - delete /{id} - usunięcie meala
+  - patch /{id} - jakaś aktualizacja częściowa
+  - /{id} - wybrany meal, podstawowe dane
+    - tutaj muszę liczyć kcal dla całego posiłku, czyli dane z MealsProducts sobie tu wyciągnąć
+  - / - wszystkie posiłki po samej nazwie i suma kcal, bez reszty makro
+- /diary (tutaj też Dependency do current usera):
+  - delete /{id} - usunięcie wpisu z tej tabeli
+  - post / - wybrany posiłek po id + datetime
+  - /summary - dziennie podsumowanie (dla danego dnia, po to jest datetime) kcal, macro i posiłków
