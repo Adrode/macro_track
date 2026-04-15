@@ -4,8 +4,6 @@
   - email
   - username
   - hashed_password
-  - weight
-  - height
   - kcal_daily_goal
   - proteing_daily_goal
   - fat_daily_goal
