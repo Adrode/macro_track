@@ -1,9 +1,6 @@
-from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session
-from database.database import get_db
+from fastapi import FastAPI
+from routes import users
 
 app = FastAPI()
 
-@app.get('/kekw')
-def kekw(db: Session = Depends(get_db)):
-  pass
+app.include_router(users.router, prefix="/users", tags=["Users"])

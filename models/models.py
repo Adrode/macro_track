@@ -18,7 +18,7 @@ class User(Base):
   fat_daily_goal: Mapped[int]
   carbs_daily_goal: Mapped[int]
 
-  meals: Mapped[list["Meal"]] = relationship()
+  meals: Mapped[list["Meal"]] = relationship(back_populates="user")
   diary: Mapped[list["UserDiary"]] = relationship()
 
 class Product(Base):
@@ -40,6 +40,7 @@ class Meal(Base):
   name: Mapped[str]
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
+  user: Mapped["User"] = relationship(back_populates="meals")
   meals_products: Mapped[list["MealProduct"]] = relationship()
 
 class MealProduct(Base):

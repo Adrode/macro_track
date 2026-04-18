@@ -34,6 +34,7 @@
 ---
 **Endpointy**:
 - /users:
+  - post /register - do przerobienia potem na auth
   - /me - email, usernamem, weight, height, kcal, itd.
     - podstawowe info
   - patch /me - aktualizacja weight, height, kcal, macros
@@ -51,3 +52,9 @@
   - delete /{id} - usunięcie wpisu z tej tabeli
   - post / - wybrany posiłek po id + datetime
   - /summary - dziennie podsumowanie (dla danego dnia, po to jest datetime) kcal, macro i posiłków
+
+**Do dodania**:
+- Alembic
+- JWT access
+- refresh token (do przemyślenia)
+- 
