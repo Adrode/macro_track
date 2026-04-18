@@ -19,7 +19,7 @@ class User(Base):
   carbs_daily_goal: Mapped[int]
 
   meals: Mapped[list["Meal"]] = relationship()
-  diary: Mapped["UserDiary"] = relationship()
+  diary: Mapped[list["UserDiary"]] = relationship()
 
 class Product(Base):
   __tablename__ = "products"
@@ -40,7 +40,7 @@ class Meal(Base):
   name: Mapped[str]
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
-  meals_products: Mapped["MealProduct"] = relationship()
+  meals_products: Mapped[list["MealProduct"]] = relationship()
 
 class MealProduct(Base):
   __tablename__ = "meals_products"
@@ -60,6 +60,4 @@ class UserDiary(Base):
   meal_id: Mapped[int] = mapped_column(ForeignKey("meals.id"))
   meal_datetime: Mapped[datetime]
 
-  meal: Mapped[list["Meal"]] = relationship()
-
-# do dokończenia jeszcze relacje (back_populates) 
+  meal: Mapped["Meal"] = relationship()
