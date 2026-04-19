@@ -13,4 +13,4 @@ def get_db():
   try:
     yield session
   finally:
-    session.close()  
+    session.close()

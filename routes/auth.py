@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from sqlalchemy import insert
 from sqlalchemy.exc import IntegrityError
 from schemas import schemas
 from models import models
