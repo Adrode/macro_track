@@ -9,8 +9,7 @@ router = APIRouter()
 
 @router.get("/{id}", response_model=schemas.ResponseUser)
 def get_me(id: int, session: session_dependency):
-  stmt = select(models.User).where(models.User.id == id)
-  user = session.scalars(stmt).first()
+  user = session.scalars(select(models.User).where(models.User.id == id)).first()
 
   if not user:
     raise not_found_exc
@@ -23,8 +22,7 @@ def patch_me(
     patch_data: schemas.PatchUser,
     session: session_dependency
   ):
-  stmt = select(models.User).where(models.User.id == id)
-  user = session.scalars(stmt).first()
+  user = session.scalars(select(models.User).where(models.User.id == id)).first()
 
   if not user:
     raise not_found_exc
