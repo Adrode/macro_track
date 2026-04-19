@@ -33,8 +33,10 @@
   - meal_datetime
 ---
 **Endpointy**:
-- /users:
+- /auth:
   - post /register - do przerobienia potem na auth
+  - post /login - access token
+- /users:
   - /me - email, usernamem, weight, height, kcal, itd.
     - podstawowe info
   - patch /me - aktualizacja weight, height, kcal, macros

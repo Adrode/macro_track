@@ -8,7 +8,7 @@ from authentication.pwd_hash import hash_password
 router = APIRouter()
 
 @router.post("/register", response_model=schemas.ResponseUser)
-def register(data: schemas.CreateUser, db: session_dependency):
+def register(data: schemas.CreateUser, session: session_dependency):
   try:
     new_user = models.User(
       email=data.email,
@@ -20,9 +20,9 @@ def register(data: schemas.CreateUser, db: session_dependency):
       carbs_daily_goal=data.carbs_daily_goal
     )
 
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    session.add(new_user)
+    session.commit()
+    session.refresh(new_user)
     return new_user
   except IntegrityError:
     raise HTTPException(
