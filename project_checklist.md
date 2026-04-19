@@ -37,9 +37,9 @@
   - post /register - do przerobienia potem na auth
   - post /login - access token
 - /users:
-  - /me - email, usernamem, weight, height, kcal, itd.
+  - X /me - email, username, weight, height, kcal, itd.
     - podstawowe info
-  - patch /me - aktualizacja weight, height, kcal, macros
+  - X patch /me - aktualizacja weight, height, kcal, macros
 - /products:
   - /{id} - podstawowe dane produktu o danym id
   - / - wszystkie produkty, podstawowe dane
