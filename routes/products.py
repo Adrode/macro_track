@@ -14,3 +14,12 @@ def get_product(id: int, session: session_dependency):
     raise not_found_exc
   
   return product
+
+@router.get("/")
+def get_products(session: session_dependency):
+  products = session.scalars(select(models.Product)).all()
+
+  if not products:
+    raise not_found_exc
+  
+  return products
