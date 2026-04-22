@@ -1,15 +1,14 @@
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import insert
 from sqlalchemy.exc import IntegrityError
-from schemas import schemas
+from schemas import user_schemas
 from models import models
 from utils.dependencies import session_dependency
 from authentication.pwd_hash import hash_password
 
 router = APIRouter()
 
-@router.post("/register", response_model=schemas.ResponseUser)
-def register(data: schemas.CreateUser, session: session_dependency):
+@router.post("/register", response_model=user_schemas.ResponseUser)
+def register(data: user_schemas.CreateUser, session: session_dependency):
   try:
     new_user = models.User(
       email=data.email,

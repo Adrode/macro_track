@@ -2,12 +2,12 @@ from fastapi import APIRouter, HTTPException
 from sqlalchemy import select
 from utils.dependencies import session_dependency
 from utils.exceptions import not_found_exc
-from schemas import schemas
+from schemas import user_schemas
 from models import models
 
 router = APIRouter()
 
-@router.get("/{id}", response_model=schemas.ResponseUser)
+@router.get("/{id}", response_model=user_schemas.ResponseUser)
 def get_me(id: int, session: session_dependency):
   user = session.scalars(select(models.User).where(models.User.id == id)).first()
 
@@ -16,10 +16,10 @@ def get_me(id: int, session: session_dependency):
 
   return user
 
-@router.patch("/{id}", response_model=schemas.ResponseUser)
+@router.patch("/{id}", response_model=user_schemas.ResponseUser)
 def patch_me(
     id: int,
-    patch_data: schemas.PatchUser,
+    patch_data: user_schemas.PatchUser,
     session: session_dependency
   ):
   user = session.scalars(select(models.User).where(models.User.id == id)).first()
