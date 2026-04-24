@@ -41,13 +41,13 @@ class Meal(Base):
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
 
   user: Mapped["User"] = relationship(back_populates="meals")
-  meals_products: Mapped[list["MealProduct"]] = relationship()
+  meals_products: Mapped[list["MealProduct"]] = relationship(passive_deletes=True)
 
 class MealProduct(Base):
   __tablename__ = "meals_products"
 
   id: Mapped[int] = mapped_column(primary_key=True)
-  meal_id: Mapped[int] = mapped_column(ForeignKey("meals.id"))
+  meal_id: Mapped[int] = mapped_column(ForeignKey("meals.id", ondelete="CASCADE"))
   product_id: Mapped[int] = mapped_column(ForeignKey("products.id"))
   grams: Mapped[int]
 
