@@ -1,7 +1,8 @@
 from fastapi import APIRouter
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from utils.dependencies import session_dependency
-from utils.exceptions import bad_request_exc
+from utils.exceptions import bad_request_exc, not_found_exc
 from models import models
 from schemas import meal_schemas
 
@@ -41,3 +42,14 @@ def add_meal(
 
   except IntegrityError:
     raise bad_request_exc
+  
+@router.delete("/{id}")
+def delete_meal(id: int, session: session_dependency):
+  meal = session.scalars(select(models.Meal).where(models.Meal.id == id)).first()
+
+  if not meal:
+    raise not_found_exc
+  
+  session.delete(meal)
+  session.commit()
+  return {"detail": f"Meal id {meal.id} removed"}
