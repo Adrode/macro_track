@@ -17,3 +17,8 @@ class CreateMealWithProducts(BaseModel):
   name: str
   user_id: int
   meal_products: list[MealProducts]
+
+class PatchMealWithProducts(BaseModel):
+  category: MealCategory | None = None
+  name: str | None = None
+  meal_products: list[MealProducts] | None = None
