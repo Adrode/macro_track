@@ -8,7 +8,7 @@ from schemas import meal_schemas
 
 router = APIRouter()
 
-@router.post("/")
+@router.post("/", response_model=meal_schemas.MealResponse)
 def add_meal(
   data: meal_schemas.CreateMealWithProducts,
   session: session_dependency
@@ -55,7 +55,7 @@ def delete_meal(id: int, session: session_dependency):
   session.commit()
   return {"detail": f"Meal id {meal.id} removed"}
 
-@router.patch("/{id}")
+@router.patch("/{id}", response_model=meal_schemas.MealResponse)
 def patch_meal(
   id: int,
   data: meal_schemas.PatchMealWithProducts,
@@ -88,3 +88,7 @@ def patch_meal(
   session.commit()
   session.refresh(meal)
   return meal
+
+@router.get("/{id}")
+def get_meal(id: int, session: session_dependency):
+  pass

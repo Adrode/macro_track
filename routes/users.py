@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from sqlalchemy import select
 from utils.dependencies import session_dependency
 from utils.exceptions import not_found_exc
@@ -21,7 +21,7 @@ def patch_me(
     id: int,
     patch_data: user_schemas.PatchUser,
     session: session_dependency
-  ):
+):
   user = session.scalars(select(models.User).where(models.User.id == id)).first()
 
   if not user:

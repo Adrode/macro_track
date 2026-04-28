@@ -22,3 +22,8 @@ class PatchMealWithProducts(BaseModel):
   category: MealCategory | None = None
   name: str | None = None
   meal_products: list[MealProducts] | None = None
+
+class MealResponse(BaseModel):
+  category: MealCategory
+  name: str
+  user_id: int
