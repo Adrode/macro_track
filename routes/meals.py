@@ -89,6 +89,38 @@ def patch_meal(
   session.refresh(meal)
   return meal
 
-@router.get("/{id}")
+@router.get("/{id}", response_model=meal_schemas.MealWithProductsResponse)
 def get_meal(id: int, session: session_dependency):
-  pass
+  meal = session.scalars(select(models.Meal).where(models.Meal.id == id)).first()
+
+  if not meal:
+    raise not_found_exc
+  
+  products_list = []
+  macro_dict = {
+    "sum_of_kcal": 0,
+    "sum_of_protein": 0,
+    "sum_of_fat": 0,
+    "sum_of_carbs": 0
+  }
+
+  for item in meal.meals_products:
+    products_list.append({
+      "product_name": item.product.name,
+      "grams": item.grams
+    })
+    macro_dict["sum_of_kcal"] += item.product.kcal_per_100g * (item.grams / 100)
+    macro_dict["sum_of_protein"] += item.product.protein_per_100g * (item.grams / 100)
+    macro_dict["sum_of_fat"] += item.product.fat_per_100g * (item.grams / 100)
+    macro_dict["sum_of_carbs"] += item.product.carbs_per_100g * (item.grams / 100)
+  
+  response = {
+    "category": meal.category,
+    "name": meal.name,
+    "user_id": meal.user_id,
+    "user_username": meal.user.username,
+    "products": products_list,
+    "macro": macro_dict
+  }
+
+  return response

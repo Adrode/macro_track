@@ -27,3 +27,21 @@ class MealResponse(BaseModel):
   category: MealCategory
   name: str
   user_id: int
+
+class ProductInMeal(BaseModel):
+  product_name: str
+  grams: int
+
+class MacroSummary(BaseModel):
+  sum_of_kcal: float
+  sum_of_protein: float
+  sum_of_fat: float
+  sum_of_carbs: float
+
+class MealWithProductsResponse(BaseModel):
+  category: MealCategory
+  name: str
+  user_id: int
+  user_username: str
+  products: list[ProductInMeal]
+  macro: MacroSummary
