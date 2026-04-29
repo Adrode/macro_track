@@ -124,3 +124,41 @@ def get_meal(id: int, session: session_dependency):
   }
 
   return response
+
+@router.get("/")
+def get_all_meals(user_id: int, session: session_dependency):
+  meals = session.scalars(select(models.Meal).where(models.Meal.user_id == user_id)).all()
+
+  if not meals:
+    raise not_found_exc
+
+  macro_dict = {
+    "sum_of_kcal": 0,
+    "sum_of_protein": 0,
+    "sum_of_fat": 0,
+    "sum_of_carbs": 0
+  }
+
+  response = []
+
+  for meal in meals:
+    for item in meal.meals_products:
+      macro_dict["sum_of_kcal"] += item.product.kcal_per_100g * (item.grams / 100)
+      macro_dict["sum_of_protein"] += item.product.protein_per_100g * (item.grams / 100)
+      macro_dict["sum_of_fat"] += item.product.fat_per_100g * (item.grams / 100)
+      macro_dict["sum_of_carbs"] += item.product.carbs_per_100g * (item.grams / 100)
+
+    response.append({
+      "name": meal.name,
+      "category": meal.category,
+      "macro": macro_dict
+    })
+
+    macro_dict = {
+    "sum_of_kcal": 0,
+    "sum_of_protein": 0,
+    "sum_of_fat": 0,
+    "sum_of_carbs": 0
+    }
+  
+  return response

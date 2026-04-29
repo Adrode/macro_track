@@ -44,19 +44,19 @@
   - /{id} - podstawowe dane produktu o danym id
   - / - wszystkie produkty, podstawowe dane
 - /meals (tutaj będzie Dependency do current usera):
-  - post / - stworzenie meala
-  - delete /{id} - usunięcie meala
-  - patch /{id} - jakaś aktualizacja częściowa
-  - /{id} - wybrany meal, podstawowe dane
+  - X post / - stworzenie meala
+  - X delete /{id} - usunięcie meala
+  - X patch /{id} - jakaś aktualizacja częściowa
+  - X /{id} - wybrany meal, podstawowe dane
     - tutaj muszę liczyć kcal dla całego posiłku, czyli dane z MealsProducts sobie tu wyciągnąć
-  - / - wszystkie posiłki po samej nazwie i suma kcal, bez reszty makro
+  - X / - wszystkie posiłki po samej nazwie i suma kcal, bez reszty makro
 - /diary (tutaj też Dependency do current usera):
   - delete /{id} - usunięcie wpisu z tej tabeli
   - post / - wybrany posiłek po id + datetime
   - /summary - dziennie podsumowanie (dla danego dnia, po to jest datetime) kcal, macro i posiłków
 
 **Do dodania**:
-- Alembic
+- X Alembic
 - JWT access
 - refresh token (do przemyślenia)
 - 
