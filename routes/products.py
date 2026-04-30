@@ -45,3 +45,17 @@ def get_products(session: session_dependency):
     raise not_found_exc
   
   return products
+
+@router.delete("/{id}")
+def delete_product(id: int, session: session_dependency):
+  product = session.scalars(select(models.Product).where(models.Product.id == id)).first()
+
+  if not product:
+    raise not_found_exc
+  
+  if product.user_id == None:
+    raise bad_request_exc
+  
+  session.delete(product)
+  session.commit()
+  return {"detail": f"Product with ID {product.id} deleted"}
