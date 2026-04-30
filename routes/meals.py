@@ -125,7 +125,7 @@ def get_meal(id: int, session: session_dependency):
 
   return response
 
-@router.get("/")
+@router.get("/", response_model=list[meal_schemas.AllMealsByUserReponse])
 def get_all_meals(user_id: int, session: session_dependency):
   meals = session.scalars(select(models.Meal).where(models.Meal.user_id == user_id)).all()
 

@@ -45,3 +45,8 @@ class MealWithProductsResponse(BaseModel):
   user_username: str
   products: list[ProductInMeal]
   macro: MacroSummary
+
+class AllMealsByUserReponse(BaseModel):
+  category: MealCategory
+  name: str
+  macro: MacroSummary
