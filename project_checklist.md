@@ -41,8 +41,11 @@
     - podstawowe info
   - X patch /me - aktualizacja weight, height, kcal, macros
 - /products:
-  - /{id} - podstawowe dane produktu o danym id
+  - X /{id} - podstawowe dane produktu o danym id
   - / - wszystkie produkty, podstawowe dane
+    - uwzględnić products przypisane do usera
+  - post / - dodanie nowego produktu, z user_id
+  - delete /{id} - ale tylko własnego produktu
 - /meals (tutaj będzie Dependency do current usera):
   - X post / - stworzenie meala
   - X delete /{id} - usunięcie meala
