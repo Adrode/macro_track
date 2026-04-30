@@ -5,7 +5,7 @@ class ProductCategory(str, Enum):
   protein="protein"
   fat="fat"
   carbs="carbs"
-  fruits_vegetables="fruits_vegetables"
+  fruits_vegetables="fruits/vegetables"
 
 class CreateProduct(BaseModel):
   category: ProductCategory
@@ -18,7 +18,7 @@ class CreateProduct(BaseModel):
 
 class ProductResponse(BaseModel):
   id: int
-  category: str
+  category: ProductCategory
   name: str
   kcal_per_100g: int
   protein_per_100g: int
