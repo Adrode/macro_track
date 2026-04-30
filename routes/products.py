@@ -8,7 +8,7 @@ from schemas import product_schemas
 
 router = APIRouter()
 
-@router.post("/")
+@router.post("/", response_model=product_schemas.ProductResponse)
 def post_product(data: product_schemas.CreateProduct, session: session_dependency):
   try:
     new_product = models.Product(
@@ -28,7 +28,7 @@ def post_product(data: product_schemas.CreateProduct, session: session_dependenc
   except IntegrityError:
     raise bad_request_exc
 
-@router.get("/{id}")
+@router.get("/{id}", response_model=product_schemas.ProductResponse)
 def get_product(id: int, session: session_dependency):
   product = session.scalars(select(models.Product).where(models.Product.id == id)).first()
 
@@ -37,7 +37,7 @@ def get_product(id: int, session: session_dependency):
   
   return product
 
-@router.get("/")
+@router.get("/", response_model=list[product_schemas.ProductResponse])
 def get_products(session: session_dependency):
   products = session.scalars(select(models.Product)).all()
 

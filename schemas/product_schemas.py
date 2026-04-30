@@ -15,3 +15,12 @@ class CreateProduct(BaseModel):
   fat_per_100g: int
   carbs_per_100g: int
   user_id: int
+
+class ProductResponse(BaseModel):
+  id: int
+  category: str
+  name: str
+  kcal_per_100g: int
+  protein_per_100g: int
+  fat_per_100g: int
+  carbs_per_100g: int
