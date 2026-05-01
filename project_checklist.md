@@ -44,8 +44,8 @@
   - X /{id} - podstawowe dane produktu o danym id
   - / - wszystkie produkty, podstawowe dane
     - uwzględnić products przypisane do usera
-  - post / - dodanie nowego produktu, z user_id
-  - delete /{id} - ale tylko własnego produktu
+  - X post / - dodanie nowego produktu, z user_id
+  - X delete /{id} - ale tylko własnego produktu
 - /meals (tutaj będzie Dependency do current usera):
   - X post / - stworzenie meala
   - X delete /{id} - usunięcie meala
@@ -56,6 +56,7 @@
 - /diary (tutaj też Dependency do current usera):
   - delete /{id} - usunięcie wpisu z tej tabeli
   - post / - wybrany posiłek po id + datetime
+    - dodać weryfikację, czy dany posiłek należy do danego usera
   - /summary - dziennie podsumowanie (dla danego dnia, po to jest datetime) kcal, macro i posiłków
 
 **Do dodania**:
