@@ -47,6 +47,7 @@ class MealWithProductsResponse(BaseModel):
   macro: MacroSummary
 
 class AllMealsByUserReponse(BaseModel):
+  id: int
   category: MealCategory
   name: str
   macro: MacroSummary

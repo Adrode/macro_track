@@ -149,6 +149,7 @@ def get_all_meals(user_id: int, session: session_dependency):
       macro_dict["sum_of_carbs"] += item.product.carbs_per_100g * (item.grams / 100)
 
     response.append({
+      "id": meal.id,
       "name": meal.name,
       "category": meal.category,
       "macro": macro_dict

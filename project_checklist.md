@@ -55,7 +55,7 @@
   - X / - wszystkie posiłki po samej nazwie i suma kcal, bez reszty makro
 - /diary (tutaj też Dependency do current usera):
   - delete /{id} - usunięcie wpisu z tej tabeli
-  - post / - wybrany posiłek po id + datetime
+  - X post / - wybrany posiłek po id + datetime
     - dodać weryfikację, czy dany posiłek należy do danego usera
   - /summary - dziennie podsumowanie (dla danego dnia, po to jest datetime) kcal, macro i posiłków
 

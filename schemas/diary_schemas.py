@@ -7,6 +7,7 @@ class CreateDiary(BaseModel):
   meal_datetime: datetime = datetime.now(timezone.utc)
 
 class DiaryResponse(BaseModel):
+  id: int
   user_id: int
   meal_id: int
   meal_datetime: datetime
