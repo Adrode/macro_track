@@ -66,3 +66,4 @@ class UserDiary(Base):
   meal_datetime: Mapped[datetime]
 
   meal: Mapped["Meal"] = relationship()
+  user: Mapped["User"] = relationship()

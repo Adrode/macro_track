@@ -37,8 +37,43 @@ def get_diary_by_date(user_id: int, date: datetime, session: session_dependency)
     func.date(models.UserDiary.meal_datetime) == date.date()
     )
   ).all()
+  user = session.scalars(select(models.User).where(models.User.id == user_id)).first()
 
   if not diary:
     raise not_found_exc
+  
+  response = []
+  daily_macro = {
+    "sum_of_kcal": 0,
+    "sum_of_protein": 0,
+    "sum_of_fat": 0,
+    "sum_of_carbs": 0
+  }
 
-  return diary
+  for item in diary:
+    response.append({
+      "id": item.id,
+      "meal_datetime": item.meal_datetime,
+      "user_id": item.user_id,
+      "meal_id": item.meal_id,
+      "meal_name": item.meal.name
+    })
+    
+    for i in item.meal.meals_products:
+      daily_macro["sum_of_kcal"] += i.product.kcal_per_100g * (i.grams / 100)
+      daily_macro["sum_of_protein"] += i.product.protein_per_100g * (i.grams / 100)
+      daily_macro["sum_of_fat"] += i.product.fat_per_100g * (i.grams / 100)
+      daily_macro["sum_of_carbs"] += i.product.carbs_per_100g * (i.grams / 100)
+
+  daily_macro_left = {
+    "kcal_left": user.kcal_daily_goal - daily_macro["sum_of_kcal"],
+    "protein_left": user.protein_daily_goal - daily_macro["sum_of_protein"],
+    "fat_left": user.fat_daily_goal - daily_macro["sum_of_fat"],
+    "carbs_left": user.carbs_daily_goal - daily_macro["sum_of_carbs"]
+  }
+
+  return {
+    "diary": response,
+    "daily_macro_sum": daily_macro,
+    "daily_macro_left": daily_macro_left
+  }
