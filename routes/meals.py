@@ -106,6 +106,7 @@ def get_meal(id: int, session: session_dependency):
 
   for item in meal.meals_products:
     products_list.append({
+      "product_id": item.product.id,
       "product_name": item.product.name,
       "grams": item.grams
     })

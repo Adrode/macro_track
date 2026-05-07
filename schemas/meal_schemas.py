@@ -29,6 +29,7 @@ class MealResponse(BaseModel):
   user_id: int
 
 class ProductInMeal(BaseModel):
+  product_id: int
   product_name: str
   grams: int
 
