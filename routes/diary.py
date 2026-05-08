@@ -30,6 +30,23 @@ def post_diary(data: diary_schemas.CreateDiary, session: session_dependency):
   except IntegrityError:
     raise bad_request_exc
   
+@router.get("/entry/{id}", response_model=diary_schemas.DiariesResponse)
+def get_diary_by_id(id: int, session: session_dependency):
+  diary = session.scalars(select(models.UserDiary).where(models.UserDiary.id == id)).first()
+
+  if not diary:
+    raise not_found_exc
+  
+  response = {
+    "id": diary.id,
+    "user_id": diary.user_id,
+    "meal_id": diary.meal_id,
+    "meal_name": diary.meal.name,
+    "meal_datetime": diary.meal_datetime
+  }
+
+  return response
+
 @router.get("/{user_id}/{date}", response_model=diary_schemas.DiariesByDateResponse)
 def get_diary_by_date(user_id: int, date: datetime, session: session_dependency):
   diaries = session.scalars(select(models.UserDiary).where(
