@@ -116,5 +116,12 @@ def get_all_diaries(user_id: int, session: session_dependency):
   return response
 
 @router.delete("/{id}")
-def delete_diary():
-  pass
+def delete_diary(id: int, session: session_dependency):
+  diary = session.scalars(select(models.UserDiary).where(models.UserDiary.id == id)).first()
+
+  if not diary:
+    raise not_found_exc
+  
+  session.delete(diary)
+  session.commit()
+  return {"detail": f"Diary by ID {diary.id} removed from database"}
