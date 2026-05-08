@@ -9,7 +9,7 @@ from models import models
 
 router = APIRouter()
 
-@router.post("/", response_model=diary_schemas.DiaryResponse)
+@router.post("/", response_model=diary_schemas.NewDiaryResponse)
 def post_diary(data: diary_schemas.CreateDiary, session: session_dependency):
   try:
     new_diary = models.UserDiary(
@@ -30,16 +30,16 @@ def post_diary(data: diary_schemas.CreateDiary, session: session_dependency):
   except IntegrityError:
     raise bad_request_exc
   
-@router.get("/{user_id}/{date}")
+@router.get("/{user_id}/{date}", response_model=diary_schemas.DiariesByDateResponse)
 def get_diary_by_date(user_id: int, date: datetime, session: session_dependency):
-  diary = session.scalars(select(models.UserDiary).where(
+  diaries = session.scalars(select(models.UserDiary).where(
     models.UserDiary.user_id == user_id,
     func.date(models.UserDiary.meal_datetime) == date.date()
     )
   ).all()
   user = session.scalars(select(models.User).where(models.User.id == user_id)).first()
 
-  if not diary:
+  if not diaries:
     raise not_found_exc
   
   response = []
@@ -50,7 +50,7 @@ def get_diary_by_date(user_id: int, date: datetime, session: session_dependency)
     "sum_of_carbs": 0
   }
 
-  for item in diary:
+  for item in diaries:
     response.append({
       "id": item.id,
       "meal_datetime": item.meal_datetime,
@@ -77,3 +77,23 @@ def get_diary_by_date(user_id: int, date: datetime, session: session_dependency)
     "daily_macro_sum": daily_macro,
     "daily_macro_left": daily_macro_left
   }
+
+@router.get("/{user_id}", response_model=list[diary_schemas.DiariesResponse])
+def get_all_diaries(user_id: int, session: session_dependency):
+  diaries = session.scalars(select(models.UserDiary).where(models.UserDiary.user_id == user_id)).all()
+
+  if not diaries:
+    raise not_found_exc
+  
+  response = []
+
+  for item in diaries:
+    response.append({
+      "id": item.id,
+      "user_id": item.user_id,
+      "meal_id": item.meal_id,
+      "meal_name": item.meal.name,
+      "meal_datetime": item.meal_datetime
+    })
+
+  return response
