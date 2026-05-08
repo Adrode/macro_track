@@ -20,7 +20,7 @@ class User(Base):
 
   meals: Mapped[list["Meal"]] = relationship(back_populates="user")
   products: Mapped[list["Product"]] = relationship(back_populates="user")
-  diary: Mapped[list["UserDiary"]] = relationship()
+  diary: Mapped[list["UserDiary"]] = relationship(passive_deletes=True)
 
 class Product(Base):
   __tablename__ = "products"
@@ -61,8 +61,8 @@ class UserDiary(Base):
   __tablename__ = "users_diary"
 
   id: Mapped[int] = mapped_column(primary_key=True)
-  user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-  meal_id: Mapped[int] = mapped_column(ForeignKey("meals.id"))
+  user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+  meal_id: Mapped[int] = mapped_column(ForeignKey("meals.id", ondelete="CASCADE"))
   meal_datetime: Mapped[datetime]
 
   meal: Mapped["Meal"] = relationship()

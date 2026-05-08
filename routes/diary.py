@@ -114,3 +114,7 @@ def get_all_diaries(user_id: int, session: session_dependency):
     })
 
   return response
+
+@router.delete("/{id}")
+def delete_diary():
+  pass
