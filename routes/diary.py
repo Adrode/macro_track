@@ -125,3 +125,23 @@ def delete_diary(id: int, session: session_dependency):
   session.delete(diary)
   session.commit()
   return {"detail": f"Diary by ID {diary.id} removed from database"}
+
+@router.patch("/{id}")
+def patch_diary(
+  id: int,
+  data: diary_schemas.PatchDiary,
+  session: session_dependency
+):
+  diary = session.scalars(select(models.UserDiary).where(models.UserDiary.id == id)).first()
+
+  if not diary:
+    raise not_found_exc
+  
+  to_patch = data.model_dump(exclude_unset=True)
+
+  for key, value in to_patch.items():
+    setattr(diary, key, value)
+
+  session.commit()
+  session.refresh(diary)
+  return diary

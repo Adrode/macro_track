@@ -35,3 +35,7 @@ class DiariesByDateResponse(BaseModel):
   diary: list[DiariesResponse]
   daily_macro_sum: DailyMacroSum
   daily_macro_left: DailyMacroLeft
+
+class PatchDiary(BaseModel):
+  meal_id: int | None = None
+  meal_datetime: datetime | None = None
