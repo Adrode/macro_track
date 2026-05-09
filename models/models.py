@@ -18,7 +18,7 @@ class User(Base):
   fat_daily_goal: Mapped[int]
   carbs_daily_goal: Mapped[int]
 
-  meals: Mapped[list["Meal"]] = relationship(back_populates="user")
+  meals: Mapped[list["Meal"]] = relationship(back_populates="user", passive_deletes=True)
   products: Mapped[list["Product"]] = relationship(back_populates="user")
   diary: Mapped[list["UserDiary"]] = relationship(passive_deletes=True)
 
@@ -42,7 +42,8 @@ class Meal(Base):
   id: Mapped[int] = mapped_column(primary_key=True)
   category: Mapped[str]
   name: Mapped[str]
-  user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+  user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+  is_active: Mapped[bool] = mapped_column(default=True)
 
   user: Mapped["User"] = relationship(back_populates="meals")
   meals_products: Mapped[list["MealProduct"]] = relationship(passive_deletes=True)
@@ -62,7 +63,7 @@ class UserDiary(Base):
 
   id: Mapped[int] = mapped_column(primary_key=True)
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-  meal_id: Mapped[int] = mapped_column(ForeignKey("meals.id", ondelete="CASCADE"))
+  meal_id: Mapped[int] = mapped_column(ForeignKey("meals.id"))
   meal_datetime: Mapped[datetime]
 
   meal: Mapped["Meal"] = relationship()

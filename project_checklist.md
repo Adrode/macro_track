@@ -54,13 +54,12 @@
     - tutaj muszę liczyć kcal dla całego posiłku, czyli dane z MealsProducts sobie tu wyciągnąć
   - X / - wszystkie posiłki po samej nazwie i suma kcal, bez reszty makro
 - /diary (tutaj też Dependency do current usera):
-  - delete /{id} - usunięcie wpisu z tej tabeli
+  - X delete /{id} - usunięcie wpisu z tej tabeli
   - X post / - wybrany posiłek po id + datetime
     - dodać weryfikację, czy dany posiłek należy do danego usera
-  - /summary - dziennie podsumowanie (dla danego dnia, po to jest datetime) kcal, macro i posiłków
+  - X /summary - dziennie podsumowanie (dla danego dnia, po to jest datetime) kcal, macro i posiłków
 
 **Do dodania**:
 - X Alembic
 - JWT access
 - refresh token (do przemyślenia)
-- 
