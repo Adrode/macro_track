@@ -23,6 +23,9 @@ def post_diary(data: diary_schemas.CreateDiary, session: session_dependency):
 
     if new_diary.meal.user_id != data.user_id:
       raise bad_request_exc
+    
+    if new_diary.meal.is_active == False:
+      raise bad_request_exc
 
     session.commit()
     session.refresh(new_diary)
@@ -133,9 +136,14 @@ def patch_diary(
   session: session_dependency
 ):
   diary = session.scalars(select(models.UserDiary).where(models.UserDiary.id == id)).first()
-
+  
   if not diary:
     raise not_found_exc
+  
+  if data.meal_id:
+    meal = session.scalars(select(models.Meal).where(models.Meal.id == data.meal_id)).first()
+    if meal.is_active == False:
+      raise bad_request_exc
   
   to_patch = data.model_dump(exclude_unset=True)
 
