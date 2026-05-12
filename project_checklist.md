@@ -63,3 +63,6 @@
 - X Alembic
 - JWT access
 - refresh token (do przemyślenia)
+
+
+- OBSŁUŻYĆ IS_ACTIVE Z MEALS W ENDPOINTACH

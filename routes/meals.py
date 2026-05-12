@@ -55,6 +55,22 @@ def delete_meal(id: int, session: session_dependency):
   session.commit()
   return {"detail": f"Meal id {meal.id} removed"}
 
+@router.patch("/is_active/{id}", response_model=meal_schemas.MealIsActiveResponse)
+def patch_is_active_by_id(
+  id: int,
+  data: meal_schemas.PatchMealIsActive,
+  session: session_dependency
+):
+  meal = session.scalars(select(models.Meal).where(models.Meal.id == id)).first()
+
+  if not meal:
+    raise not_found_exc
+  
+  meal.is_active = data.is_active
+  session.commit()
+  session.refresh(meal)
+  return meal
+
 @router.patch("/{id}", response_model=meal_schemas.MealResponse)
 def patch_meal(
   id: int,

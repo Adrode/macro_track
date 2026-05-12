@@ -23,6 +23,14 @@ class PatchMealWithProducts(BaseModel):
   name: str | None = None
   meal_products: list[MealProducts] | None = None
 
+class PatchMealIsActive(BaseModel):
+  is_active: bool
+
+class MealIsActiveResponse(BaseModel):
+  id: int
+  name: str
+  is_active: bool
+
 class MealResponse(BaseModel):
   category: MealCategory
   name: str
