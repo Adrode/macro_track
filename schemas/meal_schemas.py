@@ -52,6 +52,7 @@ class MealWithProductsResponse(BaseModel):
   name: str
   user_id: int
   user_username: str
+  is_active: bool
   products: list[ProductInMeal]
   macro: MacroSummary
 
@@ -59,4 +60,5 @@ class AllMealsByUserReponse(BaseModel):
   id: int
   category: MealCategory
   name: str
+  is_active: bool
   macro: MacroSummary

@@ -136,6 +136,7 @@ def get_meal(id: int, session: session_dependency):
     "name": meal.name,
     "user_id": meal.user_id,
     "user_username": meal.user.username,
+    "is_active": meal.is_active,
     "products": products_list,
     "macro": macro_dict
   }
@@ -143,8 +144,11 @@ def get_meal(id: int, session: session_dependency):
   return response
 
 @router.get("/", response_model=list[meal_schemas.AllMealsByUserReponse])
-def get_all_meals(user_id: int, session: session_dependency):
-  meals = session.scalars(select(models.Meal).where(models.Meal.user_id == user_id)).all()
+def get_is_active_meals(user_id: int, session: session_dependency):
+  meals = session.scalars(select(models.Meal).where(
+    models.Meal.user_id == user_id,
+    models.Meal.is_active == True
+  )).all()
 
   if not meals:
     raise not_found_exc
@@ -169,6 +173,50 @@ def get_all_meals(user_id: int, session: session_dependency):
       "id": meal.id,
       "name": meal.name,
       "category": meal.category,
+      "is_active": meal.is_active,
+      "macro": macro_dict
+    })
+
+    macro_dict = {
+    "sum_of_kcal": 0,
+    "sum_of_protein": 0,
+    "sum_of_fat": 0,
+    "sum_of_carbs": 0
+    }
+  
+  return response
+
+@router.get("/archived/", response_model=list[meal_schemas.AllMealsByUserReponse])
+def get_archived_meals(user_id: int, session: session_dependency):
+  meals = session.scalars(select(models.Meal).where(
+    models.Meal.user_id == user_id,
+    models.Meal.is_active == False
+  )).all()
+
+  if not meals:
+    raise not_found_exc
+
+  macro_dict = {
+    "sum_of_kcal": 0,
+    "sum_of_protein": 0,
+    "sum_of_fat": 0,
+    "sum_of_carbs": 0
+  }
+
+  response = []
+
+  for meal in meals:
+    for item in meal.meals_products:
+      macro_dict["sum_of_kcal"] += item.product.kcal_per_100g * (item.grams / 100)
+      macro_dict["sum_of_protein"] += item.product.protein_per_100g * (item.grams / 100)
+      macro_dict["sum_of_fat"] += item.product.fat_per_100g * (item.grams / 100)
+      macro_dict["sum_of_carbs"] += item.product.carbs_per_100g * (item.grams / 100)
+
+    response.append({
+      "id": meal.id,
+      "name": meal.name,
+      "category": meal.category,
+      "is_active": meal.is_active,
       "macro": macro_dict
     })
 
