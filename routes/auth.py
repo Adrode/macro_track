@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from schemas import user_schemas
@@ -32,8 +33,11 @@ def register(data: user_schemas.CreateUser, session: session_dependency):
     raise bad_request_exc
   
 @router.post("/login")
-def login(data: auth_schemas.LoginData, session: session_dependency):
-  user = session.scalars(select(models.User).where(models.User.email == data.email)).first()
+def login(
+  session: session_dependency,
+  data: OAuth2PasswordRequestForm = Depends()
+):
+  user = session.scalars(select(models.User).where(models.User.email == data.username)).first()
 
   if not user:
     raise not_found_exc
@@ -44,6 +48,6 @@ def login(data: auth_schemas.LoginData, session: session_dependency):
     )
   
   token = auth.create_access_token(
-    data={"sub": data.email}
+    data={"sub": user.email}
   )
   return {"access_token": token, "token_type": "bearer"}
