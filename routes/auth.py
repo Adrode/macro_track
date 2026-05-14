@@ -1,9 +1,13 @@
 from fastapi import APIRouter, HTTPException
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from schemas import user_schemas
 from models import models
 from utils.dependencies import session_dependency
-from authentication.pwd_hash import hash_password
+from utils.exceptions import not_found_exc, bad_request_exc
+from authentication.pwd_hash import hash_password, verify_password
+import authentication.short_tokens as auth
+from schemas import auth_schemas
 
 router = APIRouter()
 
@@ -25,7 +29,21 @@ def register(data: user_schemas.CreateUser, session: session_dependency):
     session.refresh(new_user)
     return new_user
   except IntegrityError:
+    raise bad_request_exc
+  
+@router.post("/login")
+def login(data: auth_schemas.LoginData, session: session_dependency):
+  user = session.scalars(select(models.User).where(models.User.email == data.email)).first()
+
+  if not user:
+    raise not_found_exc
+  if not verify_password(data.password, user.hashed_password):
     raise HTTPException(
-      status_code=400,
-      detail="Bad request"
+      status_code=401,
+      detail="Wrong email or password"
     )
+  
+  token = auth.create_access_token(
+    data={"sub": data.email}
+  )
+  return {"access_token": token, "token_type": "bearer"}
