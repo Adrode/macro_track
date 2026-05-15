@@ -1,11 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from schemas import user_schemas
 from models import models
 from utils.dependencies import session_dependency
-from utils.exceptions import not_found_exc, bad_request_exc
+from utils.exceptions import not_found_exc, bad_request_exc, not_authorized_token_exc
 from authentication.pwd_hash import hash_password, verify_password
 import authentication.short_tokens as auth
 from schemas import auth_schemas
@@ -13,7 +13,7 @@ from schemas import auth_schemas
 router = APIRouter()
 
 @router.post("/register", response_model=user_schemas.ResponseUser)
-def register(data: user_schemas.CreateUser, session: session_dependency):
+def register(data: auth_schemas.CreateUser, session: session_dependency):
   try:
     new_user = models.User(
       email=data.email,
@@ -32,7 +32,7 @@ def register(data: user_schemas.CreateUser, session: session_dependency):
   except IntegrityError:
     raise bad_request_exc
   
-@router.post("/login")
+@router.post("/login", response_model=auth_schemas.TokenResponse)
 def login(
   session: session_dependency,
   data: OAuth2PasswordRequestForm = Depends()
@@ -42,10 +42,7 @@ def login(
   if not user:
     raise not_found_exc
   if not verify_password(data.password, user.hashed_password):
-    raise HTTPException(
-      status_code=401,
-      detail="Wrong email or password"
-    )
+    raise not_authorized_token_exc("Wrong email or password")
   
   token = auth.create_access_token(
     data={"sub": user.email}

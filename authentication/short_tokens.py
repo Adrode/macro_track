@@ -1,16 +1,19 @@
-import jwt
+import jwt, os
+from dotenv import load_dotenv
 from jwt.exceptions import InvalidTokenError
 from datetime import datetime, timezone, timedelta
-from fastapi import HTTPException, Depends
+from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
 from sqlalchemy import select
 from models import models
 from utils.dependencies import session_dependency
-from utils.exceptions import not_found_exc
+from utils.exceptions import not_found_exc, not_authorized_token_exc
 
-SECRET_KEY = "dbfda6a759c6eb0e5fa5d05c8179e28093a5f0839cdc1a9bbe39198391ff8a81"
-ALGORITHM = "HS256"
+load_dotenv()
+
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM")
 TOKEN_EXPIRE_TIME = 30
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
@@ -29,19 +32,14 @@ def get_current_user(
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     email = payload.get("sub")
     if not email:
-      raise HTTPException(
-        status_code=401,
-        detail="Not authorized"
-      )
+      raise not_authorized_token_exc("Not authorized")
+      
   except InvalidTokenError:
-    raise HTTPException(
-        status_code=401,
-        detail="Not authorized"
-      )
+    raise not_authorized_token_exc("Not authorized")
   
   user = session.scalars(select(models.User).where(models.User.email == email)).first()
 
   if not user:
-    raise not_found_exc
+    raise not_authorized_token_exc("Not authorized")
   
   return user
