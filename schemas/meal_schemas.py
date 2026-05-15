@@ -15,7 +15,6 @@ class MealProducts(BaseModel):
 class CreateMealWithProducts(BaseModel):
   category: MealCategory
   name: str
-  user_id: int
   meal_products: list[MealProducts]
 
 class PatchMealWithProducts(BaseModel):
@@ -34,7 +33,6 @@ class MealIsActiveResponse(BaseModel):
 class MealResponse(BaseModel):
   category: MealCategory
   name: str
-  user_id: int
 
 class ProductInMeal(BaseModel):
   product_id: int
@@ -50,8 +48,6 @@ class MacroSummary(BaseModel):
 class MealWithProductsResponse(BaseModel):
   category: MealCategory
   name: str
-  user_id: int
-  user_username: str
   is_active: bool
   products: list[ProductInMeal]
   macro: MacroSummary

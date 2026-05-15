@@ -1,7 +1,7 @@
 from fastapi import APIRouter
-from sqlalchemy import select
+from sqlalchemy import select, or_
 from sqlalchemy.exc import IntegrityError
-from utils.dependencies import session_dependency
+from utils.dependencies import session_dependency, current_user_dependency
 from utils.exceptions import bad_request_exc, not_found_exc
 from models import models
 from schemas import meal_schemas
@@ -11,13 +11,23 @@ router = APIRouter()
 @router.post("/", response_model=meal_schemas.MealResponse)
 def add_meal(
   data: meal_schemas.CreateMealWithProducts,
-  session: session_dependency
+  session: session_dependency,
+  current_user: current_user_dependency
 ):
   try:
+    products = session.scalars(select(models.Product.id).where(
+      or_(
+        models.Product.user_id == None,
+        models.Product.user_id == current_user.id
+      )
+    )).all()
+
+    products_set = set(products)
+
     meal = models.Meal(
       category=data.category,
       name=data.name,
-      user_id=data.user_id
+      user_id=current_user.id
     )
     
     session.add(meal)
@@ -26,6 +36,8 @@ def add_meal(
     meal_products_list = []
 
     for item in data.meal_products:
+      if item.product_id not in products_set:
+        raise not_found_exc
       meal_products_list.append(
         models.MealProduct(
           meal_id=meal.id,
