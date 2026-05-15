@@ -6,9 +6,10 @@ from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from typing import Annotated
 from sqlalchemy import select
+from sqlalchemy.orm import Session
 from models import models
-from utils.dependencies import session_dependency
-from utils.exceptions import not_found_exc, not_authorized_token_exc
+from utils.exceptions import not_authorized_token_exc
+from database.database import get_db
 
 load_dotenv()
 
@@ -26,7 +27,7 @@ def create_access_token(data: dict):
 
 def get_current_user(
   token: Annotated[str, Depends(oauth2_scheme)],
-  session: session_dependency
+  session: Annotated[Session, Depends(get_db)]
 ):
   try:
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

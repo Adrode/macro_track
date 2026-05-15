@@ -14,7 +14,6 @@ class CreateProduct(BaseModel):
   protein_per_100g: int
   fat_per_100g: int
   carbs_per_100g: int
-  user_id: int
 
 class ProductResponse(BaseModel):
   id: int

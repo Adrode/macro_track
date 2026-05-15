@@ -9,6 +9,7 @@ class PatchUser(BaseModel):
   carbs_daily_goal: int | None = None
 
 class ResponseUser(BaseModel):
+  id: int
   email: EmailStr
   username: str
   kcal_daily_goal: int
