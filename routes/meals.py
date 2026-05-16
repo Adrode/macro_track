@@ -1,8 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from sqlalchemy import select, or_
 from sqlalchemy.exc import IntegrityError
 from utils.dependencies import session_dependency, current_user_dependency
-from utils.exceptions import bad_request_exc, not_found_exc
+from utils.exceptions import bad_request_exc, not_found_exc, not_authorized_token_exc
 from models import models
 from schemas import meal_schemas
 
@@ -57,26 +57,41 @@ def add_meal(
     raise bad_request_exc
   
 @router.delete("/{id}")
-def delete_meal(id: int, session: session_dependency):
-  meal = session.scalars(select(models.Meal).where(models.Meal.id == id)).first()
+def delete_meal(
+  id: int,
+  session: session_dependency,
+  current_user: current_user_dependency
+):
+  try:
+    meal = session.scalars(select(models.Meal).where(models.Meal.id == id)).first()
 
-  if not meal:
-    raise not_found_exc
-  
-  session.delete(meal)
-  session.commit()
-  return {"detail": f"Meal id {meal.id} removed"}
+    if not meal:
+      raise not_found_exc
+    if meal.user_id != current_user.id:
+      raise not_authorized_token_exc("Not authorized")
+    
+    session.delete(meal)
+    session.commit()
+    return {"detail": f"Meal id {meal.id} removed"}
+  except IntegrityError:
+    raise HTTPException(
+      status_code=400,
+      detail="Integrity error - this item is required by other table"
+    )
 
 @router.patch("/is_active/{id}", response_model=meal_schemas.MealIsActiveResponse)
 def patch_is_active_by_id(
   id: int,
   data: meal_schemas.PatchMealIsActive,
-  session: session_dependency
+  session: session_dependency,
+  current_user: current_user_dependency
 ):
   meal = session.scalars(select(models.Meal).where(models.Meal.id == id)).first()
 
   if not meal:
     raise not_found_exc
+  if meal.user_id != current_user.id:
+    raise not_authorized_token_exc("Not authorized")
   
   meal.is_active = data.is_active
   session.commit()
@@ -87,13 +102,24 @@ def patch_is_active_by_id(
 def patch_meal(
   id: int,
   data: meal_schemas.PatchMealWithProducts,
-  session: session_dependency
+  session: session_dependency,
+  current_user: current_user_dependency
 ):
   meal = session.scalars(select(models.Meal).where(models.Meal.id == id)).first()
+  products = session.scalars(select(models.Product.id).where(
+    or_(
+      models.Product.user_id == None,
+      models.Product.user_id == current_user.id
+    )
+  )).all()
+
+  products_set = set(products)
 
   if not meal:
     raise not_found_exc
-  
+  if meal.user_id != current_user.id:
+    raise not_authorized_token_exc("Not authorized")
+
   if data.meal_products:
     for item in meal.meals_products:
       session.delete(item)
@@ -101,6 +127,8 @@ def patch_meal(
     session.flush()
 
     for item in data.meal_products:
+      if item.product_id not in products_set:
+        raise not_found_exc
       session.add(
         models.MealProduct(
           meal_id=meal.id,
