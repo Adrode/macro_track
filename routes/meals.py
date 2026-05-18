@@ -146,11 +146,17 @@ def patch_meal(
   return meal
 
 @router.get("/{id}", response_model=meal_schemas.MealWithProductsResponse)
-def get_meal(id: int, session: session_dependency):
+def get_meal(
+  id: int,
+  session: session_dependency,
+  current_user: current_user_dependency
+):
   meal = session.scalars(select(models.Meal).where(models.Meal.id == id)).first()
 
   if not meal:
     raise not_found_exc
+  if meal.user_id != current_user.id:
+    raise not_authorized_token_exc("Not authorized")
   
   products_list = []
   macro_dict = {
@@ -174,8 +180,6 @@ def get_meal(id: int, session: session_dependency):
   response = {
     "category": meal.category,
     "name": meal.name,
-    "user_id": meal.user_id,
-    "user_username": meal.user.username,
     "is_active": meal.is_active,
     "products": products_list,
     "macro": macro_dict
@@ -184,9 +188,12 @@ def get_meal(id: int, session: session_dependency):
   return response
 
 @router.get("/", response_model=list[meal_schemas.AllMealsByUserReponse])
-def get_is_active_meals(user_id: int, session: session_dependency):
+def get_is_active_meals(
+  session: session_dependency,
+  current_user: current_user_dependency
+):
   meals = session.scalars(select(models.Meal).where(
-    models.Meal.user_id == user_id,
+    models.Meal.user_id == current_user.id,
     models.Meal.is_active == True
   )).all()
 
@@ -227,9 +234,12 @@ def get_is_active_meals(user_id: int, session: session_dependency):
   return response
 
 @router.get("/archived/", response_model=list[meal_schemas.AllMealsByUserReponse])
-def get_archived_meals(user_id: int, session: session_dependency):
+def get_archived_meals(
+  session: session_dependency,
+  current_user: current_user_dependency
+):
   meals = session.scalars(select(models.Meal).where(
-    models.Meal.user_id == user_id,
+    models.Meal.user_id == current_user.id,
     models.Meal.is_active == False
   )).all()
 

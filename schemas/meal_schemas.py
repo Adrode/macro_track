@@ -1,5 +1,5 @@
 from enum import Enum
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 class MealCategory(str, Enum):
   breakfast = "breakfast"
@@ -10,7 +10,7 @@ class MealCategory(str, Enum):
 
 class MealProducts(BaseModel):
   product_id: int
-  grams: int
+  grams: int = Field(gt=0)
 
 class CreateMealWithProducts(BaseModel):
   category: MealCategory
@@ -31,6 +31,7 @@ class MealIsActiveResponse(BaseModel):
   is_active: bool
 
 class MealResponse(BaseModel):
+  id: int
   category: MealCategory
   name: str
 
