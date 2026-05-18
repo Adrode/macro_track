@@ -2,19 +2,16 @@ from pydantic import BaseModel
 from datetime import datetime, timezone
 
 class CreateDiary(BaseModel):
-  user_id: int
   meal_id: int
   meal_datetime: datetime = datetime.now(timezone.utc)
 
 class NewDiaryResponse(BaseModel):
   id: int
-  user_id: int
   meal_id: int
   meal_datetime: datetime
 
 class DiariesResponse(BaseModel):
   id: int
-  user_id: int
   meal_id: int
   meal_name: str
   meal_datetime: datetime
@@ -39,3 +36,8 @@ class DiariesByDateResponse(BaseModel):
 class PatchDiary(BaseModel):
   meal_id: int | None = None
   meal_datetime: datetime | None = None
+
+class PatchDiaryResponse(BaseModel):
+  id: int
+  meal_id: int
+  meal_datetime: datetime

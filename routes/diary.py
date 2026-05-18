@@ -2,18 +2,22 @@ from fastapi import APIRouter
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
-from utils.dependencies import session_dependency
-from utils.exceptions import not_found_exc, bad_request_exc
+from utils.dependencies import session_dependency, current_user_dependency
+from utils.exceptions import not_found_exc, bad_request_exc, not_authorized_token_exc
 from schemas import diary_schemas
 from models import models
 
 router = APIRouter()
 
 @router.post("/", response_model=diary_schemas.NewDiaryResponse)
-def post_diary(data: diary_schemas.CreateDiary, session: session_dependency):
+def post_diary(
+  data: diary_schemas.CreateDiary,
+  session: session_dependency,
+  current_user: current_user_dependency
+):
   try:
     new_diary = models.UserDiary(
-      user_id=data.user_id,
+      user_id=current_user.id,
       meal_id=data.meal_id,
       meal_datetime=data.meal_datetime
     )
@@ -21,8 +25,8 @@ def post_diary(data: diary_schemas.CreateDiary, session: session_dependency):
     session.add(new_diary)
     session.flush()
 
-    if new_diary.meal.user_id != data.user_id:
-      raise bad_request_exc
+    if new_diary.meal.user_id != current_user.id:
+      raise not_authorized_token_exc("Not authorized")
     
     if new_diary.meal.is_active == False:
       raise bad_request_exc
@@ -34,15 +38,20 @@ def post_diary(data: diary_schemas.CreateDiary, session: session_dependency):
     raise bad_request_exc
   
 @router.get("/entry/{id}", response_model=diary_schemas.DiariesResponse)
-def get_diary_by_id(id: int, session: session_dependency):
+def get_diary_by_id(
+  id: int,
+  session: session_dependency,
+  current_user: current_user_dependency
+):
   diary = session.scalars(select(models.UserDiary).where(models.UserDiary.id == id)).first()
 
   if not diary:
     raise not_found_exc
+  if diary.user_id != current_user.id:
+    raise not_authorized_token_exc("Not authorized")
   
   response = {
     "id": diary.id,
-    "user_id": diary.user_id,
     "meal_id": diary.meal_id,
     "meal_name": diary.meal.name,
     "meal_datetime": diary.meal_datetime
@@ -50,14 +59,17 @@ def get_diary_by_id(id: int, session: session_dependency):
 
   return response
 
-@router.get("/{user_id}/{date}", response_model=diary_schemas.DiariesByDateResponse)
-def get_diary_by_date(user_id: int, date: datetime, session: session_dependency):
+@router.get("/{date}", response_model=diary_schemas.DiariesByDateResponse)
+def get_diaries_by_date(
+  date: datetime,
+  session: session_dependency,
+  current_user: current_user_dependency
+):
   diaries = session.scalars(select(models.UserDiary).where(
-    models.UserDiary.user_id == user_id,
+    models.UserDiary.user_id == current_user.id,
     func.date(models.UserDiary.meal_datetime) == date.date()
     )
   ).all()
-  user = session.scalars(select(models.User).where(models.User.id == user_id)).first()
 
   if not diaries:
     raise not_found_exc
@@ -74,7 +86,6 @@ def get_diary_by_date(user_id: int, date: datetime, session: session_dependency)
     response.append({
       "id": item.id,
       "meal_datetime": item.meal_datetime,
-      "user_id": item.user_id,
       "meal_id": item.meal_id,
       "meal_name": item.meal.name
     })
@@ -86,10 +97,10 @@ def get_diary_by_date(user_id: int, date: datetime, session: session_dependency)
       daily_macro["sum_of_carbs"] += i.product.carbs_per_100g * (i.grams / 100)
 
   daily_macro_left = {
-    "kcal_left": user.kcal_daily_goal - daily_macro["sum_of_kcal"],
-    "protein_left": user.protein_daily_goal - daily_macro["sum_of_protein"],
-    "fat_left": user.fat_daily_goal - daily_macro["sum_of_fat"],
-    "carbs_left": user.carbs_daily_goal - daily_macro["sum_of_carbs"]
+    "kcal_left": current_user.kcal_daily_goal - daily_macro["sum_of_kcal"],
+    "protein_left": current_user.protein_daily_goal - daily_macro["sum_of_protein"],
+    "fat_left": current_user.fat_daily_goal - daily_macro["sum_of_fat"],
+    "carbs_left": current_user.carbs_daily_goal - daily_macro["sum_of_carbs"]
   }
 
   return {
@@ -98,9 +109,12 @@ def get_diary_by_date(user_id: int, date: datetime, session: session_dependency)
     "daily_macro_left": daily_macro_left
   }
 
-@router.get("/{user_id}", response_model=list[diary_schemas.DiariesResponse])
-def get_all_diaries(user_id: int, session: session_dependency):
-  diaries = session.scalars(select(models.UserDiary).where(models.UserDiary.user_id == user_id)).all()
+@router.get("/", response_model=list[diary_schemas.DiariesResponse])
+def get_all_diaries(
+  session: session_dependency,
+  current_user: current_user_dependency
+):
+  diaries = session.scalars(select(models.UserDiary).where(models.UserDiary.user_id == current_user.id)).all()
 
   if not diaries:
     raise not_found_exc
@@ -110,7 +124,6 @@ def get_all_diaries(user_id: int, session: session_dependency):
   for item in diaries:
     response.append({
       "id": item.id,
-      "user_id": item.user_id,
       "meal_id": item.meal_id,
       "meal_name": item.meal.name,
       "meal_datetime": item.meal_datetime
@@ -119,29 +132,40 @@ def get_all_diaries(user_id: int, session: session_dependency):
   return response
 
 @router.delete("/{id}")
-def delete_diary(id: int, session: session_dependency):
+def delete_diary(
+  id: int,
+  session: session_dependency,
+  current_user: current_user_dependency  
+):
   diary = session.scalars(select(models.UserDiary).where(models.UserDiary.id == id)).first()
 
   if not diary:
     raise not_found_exc
+  if diary.user_id != current_user.id:
+    raise not_authorized_token_exc("Not authorized")
   
   session.delete(diary)
   session.commit()
   return {"detail": f"Diary by ID {diary.id} removed from database"}
 
-@router.patch("/{id}")
+@router.patch("/{id}", response_model=diary_schemas.PatchDiaryResponse)
 def patch_diary(
   id: int,
   data: diary_schemas.PatchDiary,
-  session: session_dependency
+  session: session_dependency,
+  current_user: current_user_dependency
 ):
   diary = session.scalars(select(models.UserDiary).where(models.UserDiary.id == id)).first()
   
   if not diary:
     raise not_found_exc
+  if diary.user_id != current_user.id:
+    raise not_authorized_token_exc("Not authorized")
   
   if data.meal_id:
     meal = session.scalars(select(models.Meal).where(models.Meal.id == data.meal_id)).first()
+    if meal.user_id != current_user.id:
+      raise not_authorized_token_exc("Not authorized")
     if meal.is_active == False:
       raise bad_request_exc
   
