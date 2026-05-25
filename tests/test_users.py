@@ -1,5 +1,6 @@
 from fastapi.testclient import TestClient
 from main import app
+import authentication.short_tokens as auth
 
 client = TestClient(app)
 
@@ -9,11 +10,19 @@ def test_get_me_unauthorized():
   assert response.status_code == 401
 
 def test_get_me_authorized():
-  response = client.get("/users/")
+  token = auth.create_access_token({
+    "sub": "adrian@gmail.com"
+  })
 
-  assert response.status_code == 200
+  response = client.get(
+    "/users/",
+    headers={
+      "Authorization": f"Bearer {token}"
+    }
+    )
 
   data = response.json()
 
-  assert "id" in data
+  assert response.status_code == 200
   assert "email" in data
+  
