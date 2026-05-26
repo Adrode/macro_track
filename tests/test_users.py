@@ -1,15 +1,11 @@
-from fastapi.testclient import TestClient
-from main import app
 import authentication.short_tokens as auth
 
-client = TestClient(app)
-
-def test_get_me_unauthorized():
+def test_get_me_unauthorized(client):
   response = client.get("/users/")
 
   assert response.status_code == 401
 
-def test_get_me_authorized():
+def test_get_me_authorized(client):
   token = auth.create_access_token({
       "sub": "adrian@gmail.com"
     })
@@ -26,7 +22,7 @@ def test_get_me_authorized():
   assert "email" in data
   assert "id" in data
   
-def test_patch_me_unauthorized():
+def test_patch_me_unauthorized(client):
   response = client.patch(
     "/users/",
     json={"username": "Adison"}
@@ -34,7 +30,7 @@ def test_patch_me_unauthorized():
 
   assert response.status_code == 401
 
-def test_patch_me_authorized():
+def test_patch_me_authorized(client):
   token = auth.create_access_token({
       "sub": "adrian@gmail.com"
     })
@@ -53,7 +49,7 @@ def test_patch_me_authorized():
 
   assert response2.json()["username"] == "Adison"
 
-def test_patch_me_invalid_email():
+def test_patch_me_invalid_email(client):
   token = auth.create_access_token({
       "sub": "adrian@gmail.com"
     })
