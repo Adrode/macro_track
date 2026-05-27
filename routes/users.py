@@ -4,7 +4,6 @@ from utils.dependencies import session_dependency, current_user_dependency
 from utils.exceptions import not_found_exc
 from schemas import user_schemas
 from models import models
-import authentication.short_tokens as auth
 
 router = APIRouter()
 
