@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, StaticPool 
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 from main import app
 from database.database import get_db
 from models.models import Base
@@ -39,6 +39,14 @@ def setup_db():
   #   pytest end
   #   drop tables
   # autouse=True czyli automatycznie używa setup dla każdego testu, więc nie trzeba tego pisać w arugmencie każdego testu
+
+@pytest.fixture()
+def db_session():
+  session = TestingSessionLocal()
+  try:
+    yield session
+  finally:
+    session.close()
 
 @pytest.fixture()
 def client():
