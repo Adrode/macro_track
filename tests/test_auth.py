@@ -95,7 +95,7 @@ def test_login_invalid_data(client):
     }
   )
 
-  assert response.status_code == 404
+  assert response.status_code == 401
 
 def test_login_invalid_password(client, test_user):
   response = client.post(

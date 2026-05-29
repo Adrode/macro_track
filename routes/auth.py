@@ -40,7 +40,7 @@ def login(
   user = session.scalars(select(models.User).where(models.User.email == data.username)).first()
 
   if not user:
-    raise not_found_exc
+    raise not_authorized_token_exc("Wrong email or password")
   if not verify_password(data.password, user.hashed_password):
     raise not_authorized_token_exc("Wrong email or password")
   
