@@ -5,7 +5,7 @@ from authentication.pwd_hash import hash_password
 from authentication.short_tokens import create_access_token
 
 @pytest.fixture()
-def test_user(db_session):
+def test_first_user(db_session):
   password = "fakehash"
 
   user = User(
@@ -27,12 +27,34 @@ def test_user(db_session):
   return user
 
 @pytest.fixture()
-def token(client, test_user):
+def test_second_user(db_session):
+  password = "hashfake"
+
+  user = User(
+    email=f"second-{uuid4()}@gmail.com",
+    username="Second",
+    hashed_password=hash_password(password),
+    kcal_daily_goal=3000,
+    protein_daily_goal=150,
+    fat_daily_goal=70,
+    carbs_daily_goal=300
+  )
+
+  db_session.add(user)
+  db_session.commit()
+  db_session.refresh(user)
+
+  user.plain_password = password
+
+  return user
+
+@pytest.fixture()
+def token_first_user(client, test_first_user):
   response = client.post(
     "/auth/login",
     data={
-      "username": test_user.email,
-      "password": test_user.plain_password
+      "username": test_first_user.email,
+      "password": test_first_user.plain_password
     }
   )
 
@@ -41,11 +63,29 @@ def token(client, test_user):
   return token
 
 @pytest.fixture()
-def authenticate_user(token):
-  return {"Authorization": f"Bearer {token}"}
+def token_second_user(client, test_second_user):
+  response = client.post(
+    "/auth/login",
+    data={
+      "username": test_second_user.email,
+      "password": test_second_user.plain_password
+    }
+  )
+
+  token = response.json()["access_token"]
+
+  return token
 
 @pytest.fixture()
-def test_product(db_session, test_user):
+def authenticate_first_user(token_first_user):
+  return {"Authorization": f"Bearer {token_first_user}"}
+
+@pytest.fixture()
+def authenticate_second_user(token_second_user):
+  return {"Authorization": f"Bearer {token_second_user}"}
+
+@pytest.fixture()
+def test_public_product(db_session):
   product = Product(
     category="carbs",
     name="Pierogies",
@@ -53,7 +93,7 @@ def test_product(db_session, test_user):
     protein_per_100g=20,
     fat_per_100g=5,
     carbs_per_100g=45,
-    user_id=test_user.id
+    user_id=None
   )
 
   db_session.add(product)
@@ -62,7 +102,44 @@ def test_product(db_session, test_user):
 
   return product
 
-def test_post_product_valid_data(client, authenticate_user):
+@pytest.fixture()
+def test_first_product(db_session, test_first_user):
+  product = Product(
+    category="carbs",
+    name="Pierogies",
+    kcal_per_100g=150,
+    protein_per_100g=20,
+    fat_per_100g=5,
+    carbs_per_100g=45,
+    user_id=test_first_user.id
+  )
+
+  db_session.add(product)
+  db_session.commit()
+  db_session.refresh(product)
+
+  return product
+
+@pytest.fixture()
+def test_second_product(db_session, test_second_user):
+  product = Product(
+    category="carbs",
+    name="Macaronis",
+    kcal_per_100g=350,
+    protein_per_100g=10,
+    fat_per_100g=10,
+    carbs_per_100g=60,
+    user_id=test_second_user.id
+  )
+
+  db_session.add(product)
+  db_session.commit()
+  db_session.refresh(product)
+
+  return product
+
+
+def test_post_product_valid_data(client, authenticate_first_user):
   response = client.post(
     "/products/",
     json={
@@ -73,7 +150,78 @@ def test_post_product_valid_data(client, authenticate_user):
       "fat_per_100g": 5,
       "carbs_per_100g": 45
     },
-    headers=authenticate_user
+    headers=authenticate_first_user
   )
 
   assert response.status_code == 200
+  assert response.json()["category"] == "protein"
+  assert "name" in response.json()
+  assert response.json()["kcal_per_100g"] >= 0
+  assert response.json()["protein_per_100g"] >= 0
+  assert response.json()["fat_per_100g"] >= 0
+  assert response.json()["carbs_per_100g"] >= 0
+                
+def test_post_product_invalid_data(client, authenticate_first_user):
+  response = client.post(
+    "/products/",
+    json={
+      "category": "breakfast",
+      "name": 15,
+      "kcal_per_100g": "kekw",
+      "protein_per_100g": -20,
+      "fat_per_100g": 0,
+      "carbs_per_100g": 45
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 422
+
+def test_get_product_valid_data(client, test_first_product, authenticate_first_user):
+  response = client.get(
+    f"/products/{test_first_product.id}",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 200
+
+def test_get_product_not_authenticated_user(client, test_first_product):
+  response = client.get(
+    f"/products/{test_first_product.id}"
+  )
+
+  assert response.status_code == 401
+
+def test_get_product_owned_by_other_user(client, test_second_product, authenticate_first_user):
+  response = client.get(
+    f"/products/{test_second_product.id}",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 401
+
+def test_get_product_does_not_exist(client, authenticate_first_user):
+  response = client.get(
+    "/products/0",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 404
+
+def test_get_products_valid_data(client, authenticate_first_user, authenticate_second_user):
+  response1 = client.get(
+    "/products/",
+    headers=authenticate_first_user
+  )
+
+  assert response1.status_code == 200
+  
+  response2 = client.get(
+    "/products/",
+    headers=authenticate_second_user
+  )
+
+  assert response2.status_code == 200
+
+  print(f"RESPONSE 1: {response1.json()}")
+  print(f"RESPONSE 2: {response2.json()}")
