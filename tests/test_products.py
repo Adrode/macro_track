@@ -185,7 +185,7 @@ def test_get_product_valid_data(client, test_first_product, authenticate_first_u
 
   assert response.status_code == 200
 
-def test_get_product_not_authenticated_user(client, test_first_product):
+def test_get_product_unauthorized_user(client, test_first_product):
   response = client.get(
     f"/products/{test_first_product.id}"
   )
@@ -229,6 +229,13 @@ def test_get_products_valid_data(
   assert response1.status_code == 200
   assert response2.status_code == 200
 
+def test_get_products_unauthorized(client, test_first_product, test_public_product):
+  response = client.get(
+    "/products/"
+  )
+
+  assert response.status_code == 401
+
 def test_get_products_no_products_in_db(client, authenticate_first_user, authenticate_second_user):
   response1 = client.get(
     "/products/",
@@ -242,3 +249,57 @@ def test_get_products_no_products_in_db(client, authenticate_first_user, authent
 
   assert response1.status_code == 404
   assert response2.status_code == 404
+
+def test_get_products_only_public(client, authenticate_first_user, authenticate_second_user, test_public_product):
+  response1 = client.get(
+    "/products/",
+    headers=authenticate_first_user
+  )
+
+  response2 = client.get(
+    "/products/",
+    headers=authenticate_second_user
+  )
+
+  assert response1.status_code == 200
+  assert response2.status_code == 200
+  assert response1.json() == response2.json()
+
+def test_delete_product_valid_data(client, authenticate_first_user, test_first_product):
+  response = client.delete(
+    f"/products/{test_first_product.id}",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 200
+
+def test_delete_product_unauthorized(client, test_first_product):
+  response = client.delete(
+    f"/products/{test_first_product.id}"
+  )
+
+  assert response.status_code == 401
+
+def test_delete_product_owned_by_other_user(client, test_second_product, authenticate_first_user):
+  response = client.delete(
+    f"/products/{test_second_product.id}",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 401
+
+def test_delete_product_public(client, authenticate_first_user, test_public_product):
+  response = client.delete(
+    f"/products/{test_public_product.id}",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 401
+
+def test_delete_product_does_not_exist(client, authenticate_first_user):
+  response = client.delete(
+    f"/products/0",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 404
