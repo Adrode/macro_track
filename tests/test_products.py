@@ -88,7 +88,7 @@ def authenticate_second_user(token_second_user):
 def test_public_product(db_session):
   product = Product(
     category="carbs",
-    name="Pierogies",
+    name="Baton",
     kcal_per_100g=150,
     protein_per_100g=20,
     fat_per_100g=5,
@@ -208,20 +208,37 @@ def test_get_product_does_not_exist(client, authenticate_first_user):
 
   assert response.status_code == 404
 
-def test_get_products_valid_data(client, authenticate_first_user, authenticate_second_user):
+def test_get_products_valid_data(
+    client,
+    authenticate_first_user,
+    authenticate_second_user,
+    test_public_product,
+    test_first_product,
+    test_second_product
+  ):
   response1 = client.get(
     "/products/",
     headers=authenticate_first_user
   )
-
-  assert response1.status_code == 200
   
   response2 = client.get(
     "/products/",
     headers=authenticate_second_user
   )
-
+  
+  assert response1.status_code == 200
   assert response2.status_code == 200
 
-  print(f"RESPONSE 1: {response1.json()}")
-  print(f"RESPONSE 2: {response2.json()}")
+def test_get_products_no_products_in_db(client, authenticate_first_user, authenticate_second_user):
+  response1 = client.get(
+    "/products/",
+    headers=authenticate_first_user
+  )
+
+  response2 = client.get(
+    "/products/",
+    headers=authenticate_second_user
+  )
+
+  assert response1.status_code == 404
+  assert response2.status_code == 404

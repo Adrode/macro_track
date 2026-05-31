@@ -1,10 +1,10 @@
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, StaticPool 
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import create_engine, StaticPool, delete
+from sqlalchemy.orm import sessionmaker
 from main import app
 from database.database import get_db
-from models.models import Base
+from models.models import Base, Product, User
 
 engine = create_engine(
   "sqlite:///:memory:",
@@ -50,9 +50,16 @@ def db_session():
 
 @pytest.fixture()
 def client():
-    return TestClient(app)
+  return TestClient(app)
   # TestClient to po prostu fake client HTTP, czyli:
   #   nie odpala uvicorna
   #   nie otwiera portu
   #   nie ma prawdziwego networkingu
   # ale FastAPI zachowuje się tak samo jak przy prawdziwym request
+
+@pytest.fixture(autouse=True)
+def clean_db(db_session):
+  yield
+  db_session.execute(delete(Product))
+  db_session.execute(delete(User))
+  db_session.commit()
