@@ -5,7 +5,7 @@ from sqlalchemy import create_engine, StaticPool, delete
 from sqlalchemy.orm import sessionmaker
 from main import app
 from database.database import get_db
-from models.models import Base, Product, User
+from models.models import Base, Product, User, Meal, MealProduct
 from authentication.pwd_hash import hash_password
 
 engine = create_engine(
@@ -200,3 +200,124 @@ def test_second_product(db_session, test_second_user):
   db_session.refresh(product)
 
   return product
+
+# --- MEAL 1, FIRST USER
+@pytest.fixture()
+def test_meal_product_first_user_1(db_session, test_first_product):
+  meal_product = MealProduct(
+    product_id=test_first_product.id,
+    grams=100
+  )
+
+  db_session.add(meal_product)
+  db_session.commit()
+  db_session.refresh(meal_product)
+
+  return meal_product
+
+@pytest.fixture()
+def test_meal_product_first_user_2(db_session, test_public_product):
+  meal_product = MealProduct(
+    product_id=test_public_product.id,
+    grams=200
+  )
+
+  db_session.add(meal_product)
+  db_session.commit()
+  db_session.refresh(meal_product)
+
+  return meal_product
+
+@pytest.fixture()
+def test_meal_first_user_1(
+  db_session,
+  test_first_user,
+  test_meal_product_first_user_1,
+  test_meal_product_first_user_2
+):
+  meal = Meal(
+    category="breakfast",
+    name="Oatmeal",
+    meal_products=[
+      test_meal_product_first_user_1,
+      test_meal_product_first_user_2
+    ],
+    user_id=test_first_user.id
+  )
+
+  db_session.add(meal)
+  db_session.commit()
+  db_session.refresh(meal)
+# ---
+
+# --- MEAL 1, SECOND USER
+@pytest.fixture()
+def test_meal_product_second_user_1(db_session, test_second_product):
+  meal_product = MealProduct(
+    product_id=test_second_product.id,
+    grams=150
+  )
+
+  db_session.add(meal_product)
+  db_session.commit()
+  db_session.refresh(meal_product)
+
+  return meal_product
+
+@pytest.fixture()
+def test_meal_second_user_1(
+  db_session,
+  test_second_user,
+  test_meal_product_second_user_1
+):
+  meal = Meal(
+    category="breakfast",
+    name="Oatmeal",
+    meal_products=[
+      test_meal_product_second_user_1
+    ],
+    user_id=test_second_user.id
+  )
+
+  db_session.add(meal)
+  db_session.commit()
+  db_session.refresh(meal)
+
+  return meal
+# ---
+
+# --- MEAL 2, SECOND USER
+@pytest.fixture()
+def test_meal_product_second_user_2(db_session, test_public_product):
+  meal_product = MealProduct(
+    product_id=test_public_product.id,
+    grams=250
+  )
+
+  db_session.add(meal_product)
+  db_session.commit()
+  db_session.refresh(meal_product)
+
+  return meal_product
+
+@pytest.fixture()
+def test_meal_second_user_2(
+  db_session,
+  test_second_user,
+  test_meal_product_second_user_2
+):
+  meal = Meal(
+    category="breakfast",
+    name="Oatmeal",
+    meal_products=[
+      test_meal_product_second_user_2
+    ],
+    user_id=test_second_user.id
+  )
+
+  db_session.add(meal)
+  db_session.commit()
+  db_session.refresh(meal)
+
+  return meal
+# ---
