@@ -82,7 +82,7 @@ def test_add_meal_product_unauthorized(client, authenticate_first_user, test_sec
 
   assert response.status_code == 401
 
-def test_add_meal_invalid_products(client, authenticate_first_user):
+def test_add_meal_invalid_product_id(client, authenticate_first_user):
   response = client.post(
     "/meals/",
     json={
@@ -99,3 +99,21 @@ def test_add_meal_invalid_products(client, authenticate_first_user):
   )
 
   assert response.status_code == 401
+
+def test_add_meal_invalid_product_grams(client, authenticate_first_user, test_first_product):
+  response = client.post(
+    "/meals/",
+    json={
+      "category": "breakfast",
+      "name": "Some shit",
+      "meal_products": [
+        {
+          "product_id": test_first_product.id,
+          "grams": -100
+        }
+      ]
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 422
