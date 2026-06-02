@@ -134,7 +134,7 @@ def test_delete_meal_unauthorized(client, test_meal_first_user_1):
 
   assert response.status_code == 401
 
-def test_delete_meal_does_not_exist(client, authenticate_first_user):
+def test_delete_meal_not_found(client, authenticate_first_user):
   response = client.delete(
     "/meals/0",
     headers=authenticate_first_user
@@ -145,6 +145,60 @@ def test_delete_meal_does_not_exist(client, authenticate_first_user):
 def test_delete_meal_owned_by_other_user(client, authenticate_first_user, test_meal_second_user_1):
   response = client.delete(
     f"/meals/{test_meal_second_user_1.id}",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 401
+
+def test_patch_is_active_valid_data(client, authenticate_first_user, test_meal_first_user_1):
+  response = client.patch(
+    f"/meals/is_active/{test_meal_first_user_1.id}",
+    json={
+      "is_active": False
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 200
+
+def test_patch_is_active_invalid_data(client, authenticate_first_user, test_meal_first_user_1):
+  response = client.patch(
+    f"/meals/is_active/{test_meal_first_user_1.id}",
+    json={
+      "is_active": "kekw"
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 422
+
+def test_patch_is_active_unauthorized(client, test_meal_first_user_1):
+  response = client.patch(
+    f"/meals/is_active/{test_meal_first_user_1.id}",
+    json={
+      "is_acitve": False
+    }
+  )
+
+  assert response.status_code == 401
+
+def test_patch_is_active_meal_not_found(client, authenticate_first_user):
+  response = client.patch(
+    "/meals/is_active/0",
+    json={
+      "is_active": False
+      },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 404
+
+def test_patch_is_active_meal_owned_by_other_user(client, authenticate_first_user, test_meal_second_user_1):
+  response = client.patch(
+    f"/meals/is_active/{test_meal_second_user_1.id}",
+    json={
+      "is_active": False
+      },
     headers=authenticate_first_user
   )
 
