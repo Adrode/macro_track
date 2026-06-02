@@ -117,3 +117,35 @@ def test_add_meal_invalid_product_grams(client, authenticate_first_user, test_fi
   )
 
   assert response.status_code == 422
+
+def test_delete_meal_valid_data(client, authenticate_first_user, test_meal_first_user_1):
+  response = client.delete(
+    f"/meals/{test_meal_first_user_1.id}",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 200
+  assert str(test_meal_first_user_1.id) in response.json()["detail"]
+
+def test_delete_meal_unauthorized(client, test_meal_first_user_1):
+  response = client.delete(
+    f"/meals/{test_meal_first_user_1.id}"
+  )
+
+  assert response.status_code == 401
+
+def test_delete_meal_does_not_exist(client, authenticate_first_user):
+  response = client.delete(
+    "/meals/0",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 404
+
+def test_delete_meal_owned_by_other_user(client, authenticate_first_user, test_meal_second_user_1):
+  response = client.delete(
+    f"/meals/{test_meal_second_user_1.id}",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 401
