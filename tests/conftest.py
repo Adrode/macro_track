@@ -201,123 +201,90 @@ def test_second_product(db_session, test_second_user):
 
   return product
 
-# --- MEAL 1, FIRST USER
-@pytest.fixture()
-def test_meal_product_first_user_1(db_session, test_first_product):
-  meal_product = MealProduct(
-    product_id=test_first_product.id,
-    grams=100
-  )
-
-  db_session.add(meal_product)
-  db_session.commit()
-  db_session.refresh(meal_product)
-
-  return meal_product
-
-@pytest.fixture()
-def test_meal_product_first_user_2(db_session, test_public_product):
-  meal_product = MealProduct(
-    product_id=test_public_product.id,
-    grams=200
-  )
-
-  db_session.add(meal_product)
-  db_session.commit()
-  db_session.refresh(meal_product)
-
-  return meal_product
-
 @pytest.fixture()
 def test_meal_first_user_1(
   db_session,
   test_first_user,
-  test_meal_product_first_user_1,
-  test_meal_product_first_user_2
+  test_first_product,
+  test_public_product
 ):
   meal = Meal(
     category="breakfast",
     name="Oatmeal",
-    meal_products=[
-      test_meal_product_first_user_1,
-      test_meal_product_first_user_2
-    ],
     user_id=test_first_user.id
   )
 
   db_session.add(meal)
-  db_session.commit()
-  db_session.refresh(meal)
-# ---
-
-# --- MEAL 1, SECOND USER
-@pytest.fixture()
-def test_meal_product_second_user_1(db_session, test_second_product):
-  meal_product = MealProduct(
-    product_id=test_second_product.id,
+  db_session.flush()
+  
+  meal_product1 = MealProduct(
+    meal_id=meal.id,
+    product_id=test_first_product.id,
     grams=150
   )
+  meal_product2 = MealProduct(
+    meal_id=meal.id,
+    product_id=test_public_product.id,
+    grams=200
+  )
 
-  db_session.add(meal_product)
+  db_session.add(meal_product1)
+  db_session.add(meal_product2)
   db_session.commit()
-  db_session.refresh(meal_product)
+  db_session.refresh(meal)
 
-  return meal_product
+  return meal
 
 @pytest.fixture()
 def test_meal_second_user_1(
   db_session,
   test_second_user,
-  test_meal_product_second_user_1
+  test_second_product
 ):
   meal = Meal(
-    category="breakfast",
-    name="Oatmeal",
-    meal_products=[
-      test_meal_product_second_user_1
-    ],
+    category="dinner",
+    name="Kasza manna damn",
     user_id=test_second_user.id
   )
 
   db_session.add(meal)
-  db_session.commit()
-  db_session.refresh(meal)
+  db_session.flush()
 
-  return meal
-# ---
-
-# --- MEAL 2, SECOND USER
-@pytest.fixture()
-def test_meal_product_second_user_2(db_session, test_public_product):
   meal_product = MealProduct(
-    product_id=test_public_product.id,
-    grams=250
+    meal_id=meal.id,
+    product_id=test_second_product.id,
+    grams=80
   )
 
   db_session.add(meal_product)
   db_session.commit()
-  db_session.refresh(meal_product)
+  db_session.refresh(meal)
 
-  return meal_product
+  return meal
 
 @pytest.fixture()
 def test_meal_second_user_2(
   db_session,
   test_second_user,
-  test_meal_product_second_user_2
+  test_public_product
 ):
   meal = Meal(
-    category="breakfast",
-    name="Oatmeal",
-    meal_products=[
-      test_meal_product_second_user_2
-    ],
+    category="supper",
+    name="Pijany dzik",
     user_id=test_second_user.id
   )
 
   db_session.add(meal)
+  db_session.flush()
+
+  meal_product = MealProduct(
+    meal_id=meal.id,
+    product_id=test_public_product.id,
+    grams=350
+  )
+
+  db_session.add(meal_product)
   db_session.commit()
   db_session.refresh(meal)
 
   return meal
-# ---
