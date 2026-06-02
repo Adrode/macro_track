@@ -21,7 +21,7 @@ def test_add_meal_valid_data(client, authenticate_first_user, test_first_product
   assert response.status_code == 200
   assert response.json()["category"] == "dinner"
 
-def test_add_meal_invalid_data(client, authenticate_first_user, test_first_product, test_public_product):
+def test_add_meal_invalid_data(client, authenticate_first_user, test_public_product):
   response = client.post(
     "/meals/",
     json={
@@ -64,7 +64,7 @@ def test_add_meal_unauthorized(client, test_first_product):
 
   assert response.status_code == 401
 
-def test_add_meal_product_not_authorized(client, authenticate_first_user, test_second_product):
+def test_add_meal_product_unauthorized(client, authenticate_first_user, test_second_product):
   response = client.post(
     "/meals/",
     json={
@@ -82,15 +82,20 @@ def test_add_meal_product_not_authorized(client, authenticate_first_user, test_s
 
   assert response.status_code == 401
 
-def test_add_meal_no_products(client, authenticate_first_user):
+def test_add_meal_invalid_products(client, authenticate_first_user):
   response = client.post(
     "/meals/",
     json={
-      "category": "something",
-      "name": 15,
-      "meal_products": []
+      "category": "breakfast",
+      "name": "Some shit",
+      "meal_products": [
+        {
+          "product_id": 0,
+          "grams": 100
+        }
+      ]
     },
     headers=authenticate_first_user
   )
 
-  assert response.status_code == 422
+  assert response.status_code == 401
