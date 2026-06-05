@@ -156,14 +156,14 @@ def patch_diary(
   diary = session.scalars(select(models.UserDiary).where(models.UserDiary.id == id)).first()
   
   if not diary:
-    raise not_found_exc
+    raise not_authorized_token_exc("Diaries not found")
   if diary.user_id != current_user.id:
     raise not_authorized_token_exc("Not authorized")
   
   if data.meal_id:
     meal = session.scalars(select(models.Meal).where(models.Meal.id == data.meal_id)).first()
     if meal.user_id != current_user.id:
-      raise not_authorized_token_exc("Not authorized")
+      raise not_authorized_token_exc("Meal not authorized")
     if meal.is_active == False:
       raise bad_request_exc
   

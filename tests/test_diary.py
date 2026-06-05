@@ -4,7 +4,8 @@ def test_post_diary_valid_data(client, authenticate_first_user, test_meal_first_
   response = client.post(
     "/diary/",
     json={
-      "meal_id": test_meal_first_user_1.id
+      "meal_id": test_meal_first_user_1.id,
+      "meal_datetime": datetime(2026, 5, 10, 8, 30).isoformat()
     },
     headers=authenticate_first_user
   )
@@ -146,14 +147,6 @@ def test_delete_diary_valid_data(client, authenticate_first_user, test_diary_fir
 
   assert response.status_code == 200
 
-def test_delete_diary_invalid_data(client, authenticate_first_user, test_diary_first_user_1):
-  response = client.delete(
-    "/diary/0",
-    headers=authenticate_first_user
-  )
-
-  assert response.status_code == 401
-
 def test_delete_diary_unathorized(client, test_diary_first_user_1):
   response = client.delete(
     f"/diary/{test_diary_first_user_1.id}"
@@ -177,3 +170,82 @@ def test_delete_diary_not_found(client, authenticate_first_user):
 
   assert response.status_code == 401
   assert "Diaries not found" in response.json()["detail"]
+
+def test_patch_diary_valid_data(client, authenticate_first_user, test_diary_first_user_1):
+  response = client.patch(
+    f"/diary/{test_diary_first_user_1.id}",
+    json={
+      "meal_datetime": datetime.now().isoformat()
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 200
+
+def test_patch_diary_invalid_data(client, authenticate_first_user, test_diary_first_user_1):
+  response = client.patch(
+    f"/diary/{test_diary_first_user_1.id}",
+    json={
+      "meal_id": "kekw",
+      "meal_datetime": "bim bam"
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 422
+
+def test_patch_diary_unauthorized(client, test_diary_first_user_1):
+  response = client.patch(
+    f"/diary/{test_diary_first_user_1.id}",
+    json={
+      "meal_datetime": datetime.now().isoformat()
+    }
+  )
+
+  assert response.status_code == 401
+
+def test_patch_diary_owned_by_other_user(client, authenticate_first_user, test_diary_second_user_1):
+  response = client.patch(
+    f"/diary/{test_diary_second_user_1.id}",
+    json={
+      "meal_datetime": datetime.now().isoformat()
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 401
+
+def test_patch_diary_not_found(client, authenticate_first_user):
+  response = client.patch(
+    "/diary/0",
+    json={
+      "meal_datetime": datetime.now().isoformat()
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 401
+  assert "Diaries not found" in response.json()["detail"]
+
+def test_patch_diary_unathorized_meal(client, authenticate_first_user, test_diary_first_user_1, test_meal_second_user_1):
+  response = client.patch(
+    f"/diary/{test_diary_first_user_1.id}",
+    json={
+      "meal_id": test_meal_second_user_1.id
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 401
+  assert "Meal not authorized" in response.json()["detail"]
+
+def test_patch_diary_inactive_meal(client, authenticate_second_user, test_diary_second_user_1, test_meal_second_user_2):
+  response = client.patch(
+    f"/diary/{test_diary_second_user_1.id}",
+    json={
+      "meal_id": test_meal_second_user_2.id
+    },
+    headers=authenticate_second_user
+  )
+
+  assert response.status_code == 400
