@@ -45,10 +45,8 @@ def get_diary_by_id(
 ):
   diary = session.scalars(select(models.UserDiary).where(models.UserDiary.id == id)).first()
 
-  if not diary:
-    raise not_found_exc
-  if diary.user_id != current_user.id:
-    raise not_authorized_token_exc("Not authorized")
+  if not diary or diary.user_id != current_user.id:
+    raise not_authorized_token_exc("Diary not authorized")
   
   response = {
     "id": diary.id,
@@ -72,7 +70,7 @@ def get_diaries_by_date(
   ).all()
 
   if not diaries:
-    raise not_found_exc
+    raise not_authorized_token_exc("Diaries not found")
   
   response = []
   daily_macro = {
@@ -117,7 +115,7 @@ def get_all_diaries(
   diaries = session.scalars(select(models.UserDiary).where(models.UserDiary.user_id == current_user.id)).all()
 
   if not diaries:
-    raise not_found_exc
+    raise not_authorized_token_exc("Diaries not found")
   
   response = []
 
@@ -140,7 +138,7 @@ def delete_diary(
   diary = session.scalars(select(models.UserDiary).where(models.UserDiary.id == id)).first()
 
   if not diary:
-    raise not_found_exc
+    raise not_authorized_token_exc("Diaries not found")
   if diary.user_id != current_user.id:
     raise not_authorized_token_exc("Not authorized")
   
