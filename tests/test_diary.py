@@ -67,6 +67,14 @@ def test_get_diary_by_id_invalid_id(client, authenticate_second_user):
 
   assert response.status_code == 401
 
+def test_get_diary_by_id_owned_by_other_user(client, authenticate_second_user, test_diary_first_user_1):
+  response = client.get(
+    f"/diary/entry/{test_diary_first_user_1.id}",
+    headers=authenticate_second_user
+  )
+
+  assert response.status_code == 401
+
 def test_get_diaries_by_date_valid_data(client, authenticate_second_user, test_diary_second_user_1, test_diary_second_user_2):
   response = client.get(
     f"/diary/{datetime(2026, 5, 10)}",
@@ -98,6 +106,14 @@ def test_get_diaries_by_date_not_found(client, authenticate_second_user):
 
   assert response.status_code == 401
 
+def test_get_diaries_by_date_owned_by_other_user(client, authenticate_second_user, test_diary_first_user_1):
+  response = client.get(
+    f"/diary/{datetime(2026, 5, 6)}",
+    headers=authenticate_second_user
+  )
+
+  assert response.status_code == 401
+
 def test_get_all_diaries_valid_data(client, authenticate_second_user, test_diary_second_user_1, test_diary_second_user_2):
   response = client.get(
     "/diary/",
@@ -116,6 +132,46 @@ def test_get_all_diaries_unauthorized(client, test_diary_second_user_1, test_dia
 def test_get_all_diaries_not_found(client, authenticate_first_user):
   response = client.get(
     "/diary/",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 401
+  assert "Diaries not found" in response.json()["detail"]
+
+def test_delete_diary_valid_data(client, authenticate_first_user, test_diary_first_user_1):
+  response = client.delete(
+    f"/diary/{test_diary_first_user_1.id}",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 200
+
+def test_delete_diary_invalid_data(client, authenticate_first_user, test_diary_first_user_1):
+  response = client.delete(
+    "/diary/0",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 401
+
+def test_delete_diary_unathorized(client, test_diary_first_user_1):
+  response = client.delete(
+    f"/diary/{test_diary_first_user_1.id}"
+  )
+
+  assert response.status_code == 401
+
+def test_delete_diary_owned_by_other_user(client, authenticate_first_user, test_diary_second_user_1):
+  response = client.delete(
+    f"/diary/{test_diary_second_user_1.id}",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 401
+
+def test_delete_diary_not_found(client, authenticate_first_user):
+  response = client.delete(
+    "/diary/0",
     headers=authenticate_first_user
   )
 
