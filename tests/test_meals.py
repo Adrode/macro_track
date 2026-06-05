@@ -203,3 +203,96 @@ def test_patch_is_active_meal_owned_by_other_user(client, authenticate_first_use
   )
 
   assert response.status_code == 401
+
+def test_patch_meal_valid_data(client, authenticate_first_user, test_meal_first_user_1, test_public_product):
+  response = client.patch(
+    f"/meals/{test_meal_first_user_1.id}",
+    json={
+      "category": "dinner",
+      "name": "Podżabanyj",
+      "meal_products": [
+        {
+          "product_id": test_public_product.id,
+          "grams": 120
+        }
+      ]
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 200
+  assert "dinner" in response.json()["category"]
+  assert "Podżabanyj" in response.json()["name"]
+
+def test_patch_meal_invalid_data(client, authenticate_first_user, test_meal_first_user_1):
+  response = client.patch(
+    f"/meals/{test_meal_first_user_1.id}",
+    json={
+      "category": "nyb",
+      "name": 120,
+      "meal_products": [
+        {
+          "product_id": 350,
+          "grams": -20
+        }
+      ]
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 422
+
+def test_patch_meal_unauthorized(client, test_meal_first_user_1, test_first_product):
+  response = client.patch(
+    f"/meals/{test_meal_first_user_1.id}",
+    json={
+      "category": "dinner",
+      "name": "Podżabanyj",
+      "meal_products": [
+        {
+          "product_id": test_first_product.id,
+          "grams": 120
+        }
+      ]
+    }
+  )
+
+  assert response.status_code == 401
+
+def test_patch_meal_owned_by_other_user(client, authenticate_first_user, test_meal_second_user_1):
+  response = client.patch(
+    f"/meals/{test_meal_second_user_1.id}",
+    json={
+      "name": "kekw"
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 401
+
+def test_patch_meal_not_found(client, authenticate_first_user):
+  response = client.patch(
+    "/meals/0",
+    json={
+      "name": "Kekw"
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 404
+
+def test_patch_meal_unathorized_product(client, authenticate_first_user, test_meal_first_user_1, test_second_product):
+  response = client.patch(
+    f"/meals/{test_meal_first_user_1.id}",
+    json={
+      "meal_products": [
+        {
+          "product_id": test_second_product.id,
+          "grams": 230
+        }
+      ]
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 401

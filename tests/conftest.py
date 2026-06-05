@@ -5,7 +5,7 @@ from sqlalchemy import create_engine, StaticPool, delete
 from sqlalchemy.orm import sessionmaker
 from main import app
 from database.database import get_db
-from models.models import Base, Product, User, Meal, MealProduct
+from models.models import Base, Product, User, Meal, MealProduct, UserDiary
 from authentication.pwd_hash import hash_password
 
 engine = create_engine(
@@ -64,6 +64,9 @@ def clean_db(db_session):
   yield
   db_session.execute(delete(Product))
   db_session.execute(delete(User))
+  db_session.execute(delete(MealProduct))
+  db_session.execute(delete(Meal))
+  db_session.execute(delete(UserDiary))
   db_session.commit()
 
 

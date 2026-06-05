@@ -128,7 +128,7 @@ def patch_meal(
 
     for item in data.meal_products:
       if item.product_id not in products_set:
-        raise not_found_exc
+        raise not_authorized_token_exc("Product not authorized")
       session.add(
         models.MealProduct(
           meal_id=meal.id,
