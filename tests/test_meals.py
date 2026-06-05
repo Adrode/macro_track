@@ -296,3 +296,87 @@ def test_patch_meal_unathorized_product(client, authenticate_first_user, test_me
   )
 
   assert response.status_code == 401
+
+def test_get_meal_valid_data(client, authenticate_first_user, test_meal_first_user_1):
+  response = client.get(
+    f"/meals/{test_meal_first_user_1.id}",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 200
+  assert test_meal_first_user_1.name in response.json()["name"]
+  assert "category" in response.json()
+
+def test_get_meal_unathorized(client, test_meal_first_user_1):
+  response = client.get(
+    f"/meals/{test_meal_first_user_1.id}"
+  )
+
+  assert response.status_code == 401
+
+def test_get_meal_not_found(client, authenticate_first_user):
+  response = client.get(
+    "/meals/0",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 404
+
+def test_get_meal_owned_by_other_user(client, authenticate_first_user, test_meal_second_user_1):
+  response = client.get(
+    f"/meals/{test_meal_second_user_1.id}",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 401
+
+def test_get_is_active_meals_valid_data(client, authenticate_first_user, test_meal_first_user_1):
+  response = client.get(
+    "/meals/",
+    headers=authenticate_first_user
+  )
+  
+  assert response.status_code == 200
+  for item in response.json():
+    assert item["is_active"] == True
+
+def test_get_is_active_meals_unathorized(client, test_meal_first_user_1):
+  response = client.get(
+    "/meals/"
+  )
+
+  assert response.status_code == 401
+
+def test_get_is_active_meals_not_found(client, authenticate_first_user):
+  response = client.get(
+    "/meals/",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 404
+
+# ---
+def test_get_archived_meals_valid_data(client, authenticate_second_user, test_meal_second_user_2):
+  response = client.get(
+    "/meals/archived/",
+    headers=authenticate_second_user
+  )
+  
+  assert response.status_code == 200
+  for item in response.json():
+    assert item["is_active"] == False
+
+def test_get_archived_meals_unathorized(client, test_meal_second_user_2):
+  response = client.get(
+    "/meals/archived/",
+  )
+
+  assert response.status_code == 401
+
+def test_get_archived_meals_not_found(client, authenticate_first_user):
+  response = client.get(
+    "/meals/archived/",
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 404

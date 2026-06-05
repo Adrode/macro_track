@@ -274,6 +274,7 @@ def test_meal_second_user_2(
   meal = Meal(
     category="supper",
     name="Pijany dzik",
+    is_active=False,
     user_id=test_second_user.id
   )
 
