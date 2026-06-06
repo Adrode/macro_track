@@ -20,7 +20,7 @@ class User(Base):
 
   meals: Mapped[list["Meal"]] = relationship(back_populates="user", passive_deletes=True)
   products: Mapped[list["Product"]] = relationship(back_populates="user")
-  diary: Mapped[list["UserDiary"]] = relationship(passive_deletes=True)
+  diary: Mapped[list["UserDiary"]] = relationship(back_populates="user", passive_deletes=True)
 
 class Product(Base):
   __tablename__ = "products"
@@ -67,4 +67,4 @@ class UserDiary(Base):
   meal_datetime: Mapped[datetime]
 
   meal: Mapped["Meal"] = relationship()
-  user: Mapped["User"] = relationship()
+  user: Mapped["User"] = relationship(back_populates="diary")
