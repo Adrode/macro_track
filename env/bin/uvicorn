@@ -1,4 +1,4 @@
-#!/home/adrode/dev/macro_track/env/bin/python
+#!/home/adrian/dev/macro_track/env/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
