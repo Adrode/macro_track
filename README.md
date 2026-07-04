@@ -3,7 +3,7 @@
 Macro Track is a backend API for tracking nutrition, meals, and daily food intake.  
 It is built as a REST API using FastAPI and focuses on relational data modeling, authentication, and ownership-based access control.
 
-The project is designed to go beyond simple CRUD applications by implementing nested relationships, permission checks, and structured nutrition tracking logic.
+The project is designed to go beyond simple CRUD applications by implementing nested relationships, permission checks, structured nutrition tracking logic, and AI-powered meal composition suggestions using OpenAI.
 
 ---
 
@@ -14,6 +14,7 @@ The project is designed to go beyond simple CRUD applications by implementing ne
 - Public vs private products system
 - Nested resource creation (Meal → MealProducts → Product)
 - Diary tracking with timestamped meal entries
+- AI-powered meal composition suggestions using OpenAI API
 - Relational data model with many-to-many-like structure via join table
 - Full test coverage using pytest with isolated in-memory SQLite database
 - Clear separation between user-owned and shared data
@@ -57,6 +58,7 @@ User
 - Pydantic
 - Alembic
 - JWT Authentication (custom implementation)
+- OpenAI API (AI-powered meal suggestions)
 - PostgreSQL (production)
 - SQLite in-memory (testing)
 - pytest
@@ -103,6 +105,7 @@ User
 ### Meals
 
 - POST /meals/ — Create meal with nested products (authenticated)
+- POST /meals/chatbot — Get AI suggestions for meal composition (authenticated)
 - PATCH /meals/{id} — Update meal and its composition (authenticated)
 - PATCH /meals/is_active/{id} — Toggle meal active state (authenticated)
 - DELETE /meals/{id} — Delete meal (authenticated)
@@ -149,11 +152,12 @@ source env/bin/activate
 docker compose up -d
 ```
 
-3. Create a `.env` file in the project root with your JWT settings, for example:
+3. Create a `.env` file in the project root with your JWT settings and OpenAI API key, for example:
 
 ```env
 SECRET_KEY=your_secret_key_here
 ALGORITHM=HS256
+OPENAI_API_KEY=your_openai_api_key_here
 ```
 
 4. Apply database migrations:
