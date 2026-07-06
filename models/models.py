@@ -21,6 +21,7 @@ class User(Base):
   meals: Mapped[list["Meal"]] = relationship(back_populates="user", passive_deletes=True)
   products: Mapped[list["Product"]] = relationship(back_populates="user")
   diary: Mapped[list["UserDiary"]] = relationship(back_populates="user", passive_deletes=True)
+  ai_messages: Mapped[list["AIDetails"]] = relationship(back_populates="user", passive_deletes=True)
 
 class Product(Base):
   __tablename__ = "products"
@@ -77,3 +78,6 @@ class AIDetails(Base):
   message: Mapped[str]
   message_role: Mapped[str]
   datetime: Mapped[datetime]
+  user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+
+  user: Mapped["User"] = relationship(back_populates="ai_messages")

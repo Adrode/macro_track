@@ -59,9 +59,3 @@ class AllMealsByUserReponse(BaseModel):
   name: str
   is_active: bool
   macro: MacroSummary
-
-class AskAI(BaseModel):
-  question: str
-
-class ResponseAI(BaseModel):
-  response: str

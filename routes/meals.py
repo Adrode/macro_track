@@ -9,28 +9,7 @@ from utils.exceptions import bad_request_exc, not_found_exc, not_authorized_toke
 from models import models
 from schemas import meal_schemas
 
-load_dotenv()
-
 router = APIRouter()
-client_ai = OpenAI(
-    api_key=os.getenv("OPENAI_API_KEY")
-)
-
-@router.post("/chatbot", response_model=meal_schemas.ResponseAI)
-def ask_ai(data: meal_schemas.AskAI, current_user: current_user_dependency):
-  try:
-    response_ai = client_ai.responses.create(
-      model="gpt-5-mini",
-      instructions="You are a personal trainer that helps to compose a meal. If the user's question is not related to food/meals/diet, politely decline to answer." \
-      "Return simple, concise answers. Return products in a list format. Suggest weights for products. Do not explain until asked.",
-      input=data.question
-    )
-    return {"response": response_ai.output_text}
-  except OpenAIError:
-    raise HTTPException(
-      status_code=500,
-      detail="AI Service Unavailable"
-    )
 
 @router.post("/", response_model=meal_schemas.MealResponse)
 def add_meal(
