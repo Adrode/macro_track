@@ -68,3 +68,12 @@ class UserDiary(Base):
 
   meal: Mapped["Meal"] = relationship()
   user: Mapped["User"] = relationship(back_populates="diary")
+
+class AIDetails(Base):
+  __tablename__ = "ai_details"
+
+  id: Mapped[int] = mapped_column(primary_key=True)
+  context_session: Mapped[int]
+  message: Mapped[str]
+  message_role: Mapped[str]
+  datetime: Mapped[datetime]
