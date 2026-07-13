@@ -11,7 +11,8 @@ class User(Base):
   
   id: Mapped[int] = mapped_column(primary_key=True)
   email: Mapped[str] = mapped_column(unique=True)
-  username: Mapped[Optional[str]]
+  username: Mapped[str] = mapped_column(unique=True)
+  role: Mapped[str]
   hashed_password: Mapped[str]
   kcal_daily_goal: Mapped[int]
   protein_daily_goal: Mapped[int]
@@ -19,7 +20,7 @@ class User(Base):
   carbs_daily_goal: Mapped[int]
 
   meals: Mapped[list["Meal"]] = relationship(back_populates="user", passive_deletes=True)
-  products: Mapped[list["Product"]] = relationship(back_populates="user")
+  products: Mapped[list["Product"]] = relationship(back_populates="user", passive_deletes=True)
   diary: Mapped[list["UserDiary"]] = relationship(back_populates="user", passive_deletes=True)
   ai_messages: Mapped[list["AIDetails"]] = relationship(back_populates="user", passive_deletes=True)
 
@@ -33,7 +34,7 @@ class Product(Base):
   protein_per_100g: Mapped[int]
   fat_per_100g: Mapped[int]
   carbs_per_100g: Mapped[int]
-  user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=True)
+  user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
 
   user: Mapped["User"] = relationship(back_populates="products")
 
