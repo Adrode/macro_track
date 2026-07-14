@@ -44,3 +44,23 @@ def get_current_user(
     raise not_authorized_token_exc("Not authorized")
   
   return user
+
+def get_current_trainer(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    session: Annotated[Session, Depends(get_db)]
+):
+  try:
+    payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    email = payload.get["sub"]
+    if not email:
+      raise not_authorized_token_exc("Not authorized")
+    
+  except InvalidTokenError:
+    raise not_authorized_token_exc("Not authorized")
+  
+  trainer = session.scalars(select(models.Trainer).where(models.Trainer.email == email)).first()
+
+  if not trainer:
+    not_authorized_token_exc("Not authorized")
+
+  return trainer
