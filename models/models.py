@@ -12,7 +12,6 @@ class User(Base):
   id: Mapped[int] = mapped_column(primary_key=True)
   email: Mapped[str] = mapped_column(unique=True)
   username: Mapped[str] = mapped_column(unique=True)
-  role: Mapped[str]
   hashed_password: Mapped[str]
   kcal_daily_goal: Mapped[int]
   protein_daily_goal: Mapped[int]
@@ -23,6 +22,23 @@ class User(Base):
   products: Mapped[list["Product"]] = relationship(back_populates="user", passive_deletes=True)
   diary: Mapped[list["UserDiary"]] = relationship(back_populates="user", passive_deletes=True)
   ai_messages: Mapped[list["AIDetails"]] = relationship(back_populates="user", passive_deletes=True)
+
+class Trainer(Base):
+  __tablename__ = "trainers"
+
+  id: Mapped[int] = mapped_column(primary_key=True)
+  email: Mapped[str] = mapped_column(unique=True)
+  username: Mapped[str] = mapped_column(unique=True)
+  hashed_password: Mapped[str]
+
+class TrainerClientConnection(Base):
+  __tablename__  = "trainer_client"
+
+  id: Mapped[int] = mapped_column(primary_key=True)
+  trainer_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+  client_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+  status: Mapped[str]
+  created_at: Mapped[datetime]
 
 class Product(Base):
   __tablename__ = "products"
