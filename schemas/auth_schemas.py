@@ -9,6 +9,11 @@ class CreateUser(BaseModel):
   fat_daily_goal: int
   carbs_daily_goal: int
 
+class CreateTrainer(BaseModel):
+  email: EmailStr
+  username: str
+  password: str
+
 class TokenResponse(BaseModel):
   access_token: str
   token_type: str

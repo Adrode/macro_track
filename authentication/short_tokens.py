@@ -17,7 +17,8 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 TOKEN_EXPIRE_TIME = 30
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
+def oauth2_scheme(role: str):
+  return OAuth2PasswordBearer(tokenUrl=f"auth/{role}/login")
 
 def create_access_token(data: dict):
   to_encode = data.copy()
@@ -26,7 +27,7 @@ def create_access_token(data: dict):
   return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def get_current_user(
-  token: Annotated[str, Depends(oauth2_scheme)],
+  token: Annotated[str, Depends(oauth2_scheme("user"))],
   session: Annotated[Session, Depends(get_db)]
 ):
   try:
@@ -46,12 +47,12 @@ def get_current_user(
   return user
 
 def get_current_trainer(
-    token: Annotated[str, Depends(oauth2_scheme)],
+    token: Annotated[str, Depends(oauth2_scheme("trainer"))],
     session: Annotated[Session, Depends(get_db)]
 ):
   try:
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    email = payload.get["sub"]
+    email = payload.get("sub")
     if not email:
       raise not_authorized_token_exc("Not authorized")
     
