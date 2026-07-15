@@ -18,12 +18,15 @@ ALGORITHM = os.getenv("ALGORITHM")
 TOKEN_EXPIRE_TIME = 30
 
 def oauth2_scheme(role: str):
-  return OAuth2PasswordBearer(tokenUrl=f"auth/{role}/login")
+  return OAuth2PasswordBearer(
+    tokenUrl=f"auth/{role}/login",
+    scheme_name=f"OAuth2{role.capitalize()}"
+  )
 
-def create_access_token(data: dict):
+def create_access_token(data: dict, role: str):
   to_encode = data.copy()
   expire = datetime.now(timezone.utc) + timedelta(minutes=TOKEN_EXPIRE_TIME)
-  to_encode.update({"exp": expire})
+  to_encode.update({"exp": expire, "role": role})
   return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def get_current_user(
@@ -33,7 +36,8 @@ def get_current_user(
   try:
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     email = payload.get("sub")
-    if not email:
+    role = payload.get("role")
+    if not email or role != "user":
       raise not_authorized_token_exc("Not authorized")
       
   except InvalidTokenError:
@@ -53,7 +57,8 @@ def get_current_trainer(
   try:
     payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
     email = payload.get("sub")
-    if not email:
+    role = payload.get("role")
+    if not email or role != "trainer":
       raise not_authorized_token_exc("Not authorized")
     
   except InvalidTokenError:
@@ -62,6 +67,6 @@ def get_current_trainer(
   trainer = session.scalars(select(models.Trainer).where(models.Trainer.email == email)).first()
 
   if not trainer:
-    not_authorized_token_exc("Not authorized")
+    raise not_authorized_token_exc("Not authorized")
 
   return trainer

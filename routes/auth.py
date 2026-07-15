@@ -45,7 +45,10 @@ def user_login(
     raise not_authorized_token_exc("Wrong email or password")
   
   token = auth.create_access_token(
-    data={"sub": user.email}
+    data={
+      "sub": user.email,
+      "role": "user"
+    }
   )
   return {"access_token": token, "token_type": "bearer"}
 
@@ -79,7 +82,10 @@ def trainer_login(
     raise not_authorized_token_exc("Wrong email or password")
 
   token = auth.create_access_token(
-    data={"sub": trainer.email}
+    data={
+      "sub": trainer.email,
+      "role": "trainer"
+    }
   )
 
   return {"access_token": token, "token_type": "bearer"}
