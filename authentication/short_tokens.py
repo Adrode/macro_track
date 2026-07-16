@@ -23,10 +23,10 @@ def oauth2_scheme(role: str):
     scheme_name=f"OAuth2{role.capitalize()}"
   )
 
-def create_access_token(data: dict, role: str):
+def create_access_token(data: dict):
   to_encode = data.copy()
   expire = datetime.now(timezone.utc) + timedelta(minutes=TOKEN_EXPIRE_TIME)
-  to_encode.update({"exp": expire, "role": role})
+  to_encode.update({"exp": expire})
   return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def get_current_user(
