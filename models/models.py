@@ -35,10 +35,12 @@ class TrainerClientConnection(Base):
   __tablename__  = "trainer_client"
 
   id: Mapped[int] = mapped_column(primary_key=True)
-  trainer_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+  trainer_id: Mapped[int] = mapped_column(ForeignKey("trainers.id"))
   client_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
   status: Mapped[str]
   created_at: Mapped[datetime]
+  started_at: Mapped[datetime] = mapped_column(nullable=True)
+  finished_at: Mapped[datetime] = mapped_column(nullable=True)
 
 class Product(Base):
   __tablename__ = "products"
