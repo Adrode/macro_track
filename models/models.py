@@ -22,6 +22,7 @@ class User(Base):
   products: Mapped[list["Product"]] = relationship(back_populates="user", passive_deletes=True)
   diary: Mapped[list["UserDiary"]] = relationship(back_populates="user", passive_deletes=True)
   ai_messages: Mapped[list["AIDetails"]] = relationship(back_populates="user", passive_deletes=True)
+  trainer_connection: Mapped[list["TrainerClientConnection"]] = relationship(back_populates="client")
 
 class Trainer(Base):
   __tablename__ = "trainers"
@@ -30,6 +31,8 @@ class Trainer(Base):
   email: Mapped[str] = mapped_column(unique=True)
   username: Mapped[str] = mapped_column(unique=True)
   hashed_password: Mapped[str]
+
+  client_connection: Mapped[list["TrainerClientConnection"]] = relationship(back_populates="trainer")
 
 class TrainerClientConnection(Base):
   __tablename__  = "trainer_client"
@@ -41,6 +44,9 @@ class TrainerClientConnection(Base):
   created_at: Mapped[datetime]
   started_at: Mapped[datetime] = mapped_column(nullable=True)
   finished_at: Mapped[datetime] = mapped_column(nullable=True)
+
+  trainer: Mapped[list["Trainer"]] = relationship(back_populates="client_connection")
+  client: Mapped[list["User"]] = relationship(back_populates="trainer_connection")
 
 class Product(Base):
   __tablename__ = "products"

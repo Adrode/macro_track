@@ -1,5 +1,5 @@
-from fastapi import APIRouter
-from sqlalchemy import select
+from fastapi import APIRouter, HTTPException
+from sqlalchemy import select, and_
 from sqlalchemy.exc import IntegrityError
 from models import models
 from schemas import trainer_schemas
@@ -35,9 +35,21 @@ def send_invitation_to_trainer(
 ):
     try:
         trainer = session.scalars(select(models.Trainer).where(models.Trainer.id == data.trainer_id)).first()
+        user = session.scalars(select(models.TrainerClientConnection).where(
+                and_(
+                    models.TrainerClientConnection.client_id == current_user.id,
+                    models.TrainerClientConnection.status != "closed"
+                )
+            )).all()
 
         if not trainer:
             raise not_authorized_token_exc("Not authorized")
+        
+        if user:
+            raise HTTPException(
+                status_code=400,
+                detail="This user already have a connection with a trainer."
+            )
 
         new_connection = models.TrainerClientConnection(
             trainer_id=data.trainer_id,
@@ -54,3 +66,21 @@ def send_invitation_to_trainer(
 
     except IntegrityError:
         raise bad_request_exc
+
+@router.get("/statuses", response_model=list[trainer_schemas.ListConnectionStatusResponse])
+def list_connection_statuses(
+    session: session_dependency,
+    current_trainer: current_trainer_dependency
+):
+    connections = session.scalars(select(models.TrainerClientConnection).where(models.TrainerClientConnection.trainer_id == current_trainer.id)).all()
+
+    response = []
+    for item in connections:
+        response.append({
+            "client_id": item.client_id,
+            "client_username": item.client.username,
+            "status": item.status
+        })
+
+    return response
+

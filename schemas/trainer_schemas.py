@@ -1,6 +1,10 @@
 from pydantic import BaseModel, EmailStr
 from enum import Enum
-from datetime import datetime
+
+class StatusType(str, Enum):
+    pendind="pending"
+    accepted="accepted"
+    closed="closed"
 
 class TrainerReponse(BaseModel):
     id: int
@@ -9,3 +13,8 @@ class TrainerReponse(BaseModel):
 
 class CreateConnection(BaseModel):
     trainer_id: int
+
+class ListConnectionStatusResponse(BaseModel):
+    client_id: int
+    client_username: str
+    status: StatusType
