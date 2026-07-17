@@ -15,6 +15,10 @@ class CreateConnection(BaseModel):
     trainer_id: int
 
 class ListConnectionStatusResponse(BaseModel):
+    connection_id: int
     client_id: int
     client_username: str
     status: StatusType
+
+class AcceptConnection(BaseModel):
+    connection_id: int

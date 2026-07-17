@@ -77,6 +77,7 @@ def list_connection_statuses(
     response = []
     for item in connections:
         response.append({
+            "connection_id": item.id,
             "client_id": item.client_id,
             "client_username": item.client.username,
             "status": item.status
@@ -84,3 +85,19 @@ def list_connection_statuses(
 
     return response
 
+@router.patch("/accept")
+def accept_invitation_from_user(
+    data: trainer_schemas.AcceptConnection,
+    session: session_dependency,
+    current_trainer: current_trainer_dependency
+):
+    try:
+        connection = session.scalars(select(models.TrainerClientConnection).where(models.TrainerClientConnection.id == data.connection_id)).first()
+
+        connection.status = "accepted"
+        session.commit()
+        session.refresh(connection)
+        
+        return True
+    except IntegrityError:
+        raise bad_request_exc
