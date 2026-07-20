@@ -20,5 +20,5 @@ class ListConnectionStatusResponse(BaseModel):
     client_username: str
     status: StatusType
 
-class AcceptConnection(BaseModel):
+class ManageConnection(BaseModel):
     connection_id: int

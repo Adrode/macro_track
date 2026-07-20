@@ -33,39 +33,35 @@ def send_invitation_to_trainer(
     session: session_dependency,
     current_user: current_user_dependency
 ):
-    try:
-        trainer = session.scalars(select(models.Trainer).where(models.Trainer.id == data.trainer_id)).first()
-        user = session.scalars(select(models.TrainerClientConnection).where(
-                and_(
-                    models.TrainerClientConnection.client_id == current_user.id,
-                    models.TrainerClientConnection.status != "closed"
-                )
-            )).all()
-
-        if not trainer:
-            raise not_authorized_token_exc("Not authorized")
-        
-        if user:
-            raise HTTPException(
-                status_code=400,
-                detail="This user already have a connection with a trainer."
+    trainer = session.scalars(select(models.Trainer).where(models.Trainer.id == data.trainer_id)).first()
+    valid_connection = session.scalars(select(models.TrainerClientConnection).where(
+            and_(
+                models.TrainerClientConnection.client_id == current_user.id,
+                models.TrainerClientConnection.status != "closed"
             )
+        )).all()
 
-        new_connection = models.TrainerClientConnection(
-            trainer_id=data.trainer_id,
-            client_id=current_user.id,
-            status="pending",
-            created_at=datetime.now(timezone.utc)
+    if not trainer:
+        raise not_authorized_token_exc("Not authorized")
+    
+    if valid_connection:
+        raise HTTPException(
+            status_code=400,
+            detail="This user already have a connection with a trainer."
         )
 
-        session.add(new_connection)
-        session.commit()
-        session.refresh(new_connection)
+    new_connection = models.TrainerClientConnection(
+        trainer_id=data.trainer_id,
+        client_id=current_user.id,
+        status="pending",
+        created_at=datetime.now(timezone.utc)
+    )
 
-        return True
+    session.add(new_connection)
+    session.commit()
+    session.refresh(new_connection)
 
-    except IntegrityError:
-        raise bad_request_exc
+    return {"response": f"Invitation sent to {trainer.id} ID trainer"}
 
 @router.get("/statuses", response_model=list[trainer_schemas.ListConnectionStatusResponse])
 def list_connection_statuses(
@@ -97,25 +93,81 @@ def list_connection_statuses(
 
 @router.patch("/accept")
 def accept_invitation_from_client(
-    data: trainer_schemas.AcceptConnection,
+    data: trainer_schemas.ManageConnection,
     session: session_dependency,
     current_trainer: current_trainer_dependency
 ):
-    try:
-        connection = session.scalars(select(models.TrainerClientConnection).where(
-            and_(
-                models.TrainerClientConnection.id == data.connection_id,
-                models.TrainerClientConnection.trainer_id == current_trainer.id
-            )
-        )).first()
+    connection = session.scalars(select(models.TrainerClientConnection).where(
+        and_(
+            models.TrainerClientConnection.id == data.connection_id,
+            models.TrainerClientConnection.trainer_id == current_trainer.id
+        )
+    )).first()
 
-        if not connection:
-            raise not_authorized_token_exc("Not authorized")
+    if not connection:
+        raise not_authorized_token_exc("Not authorized")
 
-        connection.status = "accepted"
-        session.commit()
-        session.refresh(connection)
-        
-        return True
-    except IntegrityError:
-        raise bad_request_exc
+    connection.status = "accepted"
+    connection.started_at = datetime.now(timezone.utc)
+    session.commit()
+    session.refresh(connection)
+    
+    return {"response": f"Invitation {connection.id} ID client accepted"}
+    
+@router.patch("/close_with_trainer")
+def close_connection_with_trainer(
+    data: trainer_schemas.ManageConnection,
+    session: session_dependency,
+    current_user: current_user_dependency
+):
+    connection = session.scalars(select(models.TrainerClientConnection).where(
+        and_(
+            models.TrainerClientConnection.id == data.connection_id,
+            models.TrainerClientConnection.client_id == current_user.id
+        )
+    )).first()
+
+    if connection.status == "closed":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Connection {connection.id} ID is already closed"
+        )
+    
+    if not connection:
+        raise not_authorized_token_exc("Not authorized")
+    
+    connection.status = "closed"
+    connection.finished_at = datetime.now(timezone.utc)
+    session.commit()
+    session.refresh(connection)
+
+    return {"response": f"Connection {connection.id} ID closed"}
+
+@router.patch("/close_with_user")
+def close_connection_with_user(
+    data: trainer_schemas.ManageConnection,
+    session: session_dependency,
+    current_trainer: current_trainer_dependency
+):
+    connection = session.scalars(select(models.TrainerClientConnection).where(
+        and_(
+            models.TrainerClientConnection.id == data.connection_id,
+            models.TrainerClientConnection.trainer_id == current_trainer.id
+        )
+    )).first()
+
+    if connection.status == "closed":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Connection {connection.id} ID is already closed"
+        )
+
+    if not connection:
+        raise not_authorized_token_exc("Not authorized")
+    
+    connection.status = "closed"
+    connection.finished_at = datetime.now(timezone.utc)
+    session.commit()
+    session.refresh(connection)
+
+    return {"response": f"Connection {connection.id} ID closed"}
