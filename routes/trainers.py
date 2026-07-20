@@ -83,10 +83,20 @@ def list_connection_statuses(
             "status": item.status
         })
 
+    order = {
+        "pending": 0,
+        "accepted": 1,
+        "closed": 2
+    }
+    def order_key(item):
+        return order[item['status']]
+
+    response.sort(key=order_key)
+
     return response
 
 @router.patch("/accept")
-def accept_invitation_from_user(
+def accept_invitation_from_client(
     data: trainer_schemas.AcceptConnection,
     session: session_dependency,
     current_trainer: current_trainer_dependency
