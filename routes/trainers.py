@@ -18,7 +18,7 @@ def get_me(session: session_dependency, current_trainer: current_trainer_depende
     
     return trainer
 
-@router.get("/all", response_model=list[trainer_schemas.TrainerReponse])
+@router.get("/", response_model=list[trainer_schemas.TrainerReponse])
 def get_all_trainers(session: session_dependency, get_current_user: current_user_dependency):
     trainers = session.scalars(select(models.Trainer)).all()
 
@@ -26,6 +26,8 @@ def get_all_trainers(session: session_dependency, get_current_user: current_user
         raise not_authorized_token_exc("Not authorized")
     
     return trainers
+
+# --- WSZYSTKIE PONIŻSZE ENDPOINTY PRZENIEŚĆ DO ROUTER = CONNECTIONS
 
 @router.post("/invitation")
 def send_invitation_to_trainer(
@@ -63,8 +65,8 @@ def send_invitation_to_trainer(
 
     return {"response": f"Invitation sent to {trainer.id} ID trainer"}
 
-@router.get("/statuses", response_model=list[trainer_schemas.ListConnectionStatusResponse])
-def list_connection_statuses(
+@router.get("/client/statuses", response_model=list[trainer_schemas.ListConnectionStatusResponse])
+def list_connection_statuses_with_clients(
     session: session_dependency,
     current_trainer: current_trainer_dependency
 ):
@@ -91,7 +93,35 @@ def list_connection_statuses(
 
     return response
 
-@router.patch("/accept")
+@router.get("/statuses", response_model=list[trainer_schemas.ListConnectionStatusWithTrainerResponse])
+def list_connection_statuses_with_trainers(
+    session: session_dependency,
+    current_user: current_user_dependency
+):
+    connections = session.scalars(select(models.TrainerClientConnection).where(models.TrainerClientConnection.client_id == current_user.id)).all()
+
+    response = []
+    for item in connections:
+        response.append({
+            "connection_id": item.id,
+            "trainer_id": item.trainer_id,
+            "trainer_username": item.trainer.username,
+            "status": item.status
+        })
+    
+    order = {
+        "pending": 0,
+        "accepted": 1,
+        "closed": 2
+    }
+    def order_key(item):
+        return order[item['status']]
+
+    response.sort(key=order_key)
+
+    return response
+
+@router.patch("/client/accept")
 def accept_invitation_from_client(
     data: trainer_schemas.ManageConnection,
     session: session_dependency,
@@ -114,7 +144,7 @@ def accept_invitation_from_client(
     
     return {"response": f"Invitation {connection.id} ID client accepted"}
     
-@router.patch("/close_with_trainer")
+@router.patch("/close")
 def close_connection_with_trainer(
     data: trainer_schemas.ManageConnection,
     session: session_dependency,
@@ -143,8 +173,8 @@ def close_connection_with_trainer(
 
     return {"response": f"Connection {connection.id} ID closed"}
 
-@router.patch("/close_with_user")
-def close_connection_with_user(
+@router.patch("/client/close")
+def close_connection_with_client(
     data: trainer_schemas.ManageConnection,
     session: session_dependency,
     current_trainer: current_trainer_dependency

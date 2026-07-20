@@ -20,5 +20,11 @@ class ListConnectionStatusResponse(BaseModel):
     client_username: str
     status: StatusType
 
+class ListConnectionStatusWithTrainerResponse(BaseModel):
+    connection_id: int
+    trainer_id: int
+    trainer_username: str
+    status: StatusType
+
 class ManageConnection(BaseModel):
     connection_id: int
