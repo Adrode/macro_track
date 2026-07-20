@@ -102,7 +102,15 @@ def accept_invitation_from_client(
     current_trainer: current_trainer_dependency
 ):
     try:
-        connection = session.scalars(select(models.TrainerClientConnection).where(models.TrainerClientConnection.id == data.connection_id)).first()
+        connection = session.scalars(select(models.TrainerClientConnection).where(
+            and_(
+                models.TrainerClientConnection.id == data.connection_id,
+                models.TrainerClientConnection.trainer_id == current_trainer.id
+            )
+        )).first()
+
+        if not connection:
+            raise not_authorized_token_exc("Not authorized")
 
         connection.status = "accepted"
         session.commit()
