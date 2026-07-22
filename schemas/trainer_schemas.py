@@ -6,6 +6,10 @@ class StatusType(str, Enum):
     accepted="accepted"
     closed="closed"
 
+class ManageStatusType(str, Enum):
+    accepted="accepted"
+    closed="closed"
+
 class TrainerReponse(BaseModel):
     id: int
     email: EmailStr
@@ -28,3 +32,4 @@ class ListConnectionStatusWithTrainerResponse(BaseModel):
 
 class ManageConnection(BaseModel):
     connection_id: int
+    manage: ManageStatusType

@@ -8,8 +8,8 @@ from datetime import datetime, timezone
 
 router = APIRouter()
 
-@router.get("/clients/statuses", response_model=list[trainer_schemas.ListConnectionStatusResponse])
-def list_connection_statuses_with_clients(
+@router.get("/clients", response_model=list[trainer_schemas.ListConnectionStatusResponse])
+def list_connections_with_clients(
     session: session_dependency,
     current_trainer: current_trainer_dependency
 ):
@@ -36,7 +36,7 @@ def list_connection_statuses_with_clients(
 
     return response
 
-@router.patch("/clients/accept")
+@router.patch("/clients/manage")
 def accept_invitation_from_client(
     data: trainer_schemas.ManageConnection,
     session: session_dependency,
@@ -52,41 +52,27 @@ def accept_invitation_from_client(
     if not connection:
         raise not_authorized_token_exc("Not authorized")
 
-    connection.status = "accepted"
+    if data.manage == "closed":
+        if connection.status == "closed":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Connection {connection.id} ID is already closed"
+            )
+        connection.status = "closed"
+    
+    if data.manage == "accepted":
+        if connection.status == "accepted":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Connection {connection.id} ID is already accepted"
+            )
+        connection.status = "accepted"
+    
     connection.started_at = datetime.now(timezone.utc)
     session.commit()
     session.refresh(connection)
     
-    return {"response": f"Invitation {connection.id} ID client accepted"}
-
-@router.patch("/clients/close")
-def close_connection_with_client(
-    data: trainer_schemas.ManageConnection,
-    session: session_dependency,
-    current_trainer: current_trainer_dependency
-):
-    connection = session.scalars(select(models.TrainerClientConnection).where(
-        and_(
-            models.TrainerClientConnection.id == data.connection_id,
-            models.TrainerClientConnection.trainer_id == current_trainer.id
-        )
-    )).first()
-
-    if connection.status == "closed":
-        raise HTTPException(
-            status_code=400,
-            detail=f"Connection {connection.id} ID is already closed"
-        )
-
-    if not connection:
-        raise not_authorized_token_exc("Not authorized")
-    
-    connection.status = "closed"
-    connection.finished_at = datetime.now(timezone.utc)
-    session.commit()
-    session.refresh(connection)
-
-    return {"response": f"Connection {connection.id} ID closed"}
+    return {"response": f"Connection with {connection.id} ID client {connection.status}"}
 
 @router.post("/invitation")
 def send_invitation_to_trainer(
@@ -124,8 +110,8 @@ def send_invitation_to_trainer(
 
     return {"response": f"Invitation sent to {trainer.id} ID trainer"}
 
-@router.get("/statuses", response_model=list[trainer_schemas.ListConnectionStatusWithTrainerResponse])
-def list_connection_statuses_with_trainers(
+@router.get("/", response_model=list[trainer_schemas.ListConnectionStatusWithTrainerResponse])
+def list_connections_with_trainers(
     session: session_dependency,
     current_user: current_user_dependency
 ):
