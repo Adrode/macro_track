@@ -7,7 +7,7 @@ class CreateDiary(BaseModel):
 
 class NewDiaryResponse(BaseModel):
   id: int
-  meal_id: int
+  meal_name: str
   meal_datetime: datetime
 
 class DiariesResponse(BaseModel):

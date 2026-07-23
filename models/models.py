@@ -72,7 +72,7 @@ class Meal(Base):
   category: Mapped[str]
   name: Mapped[str]
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-  is_active: Mapped[bool] = mapped_column(default=True)
+  is_active: Mapped[bool] = mapped_column(default=True)                               # IS_ACTIVE DO USUNIĘCIA, ENDPOINT DO POPRAWY
 
   user: Mapped["User"] = relationship(back_populates="meals")
   meal_products: Mapped[list["MealProduct"]] = relationship(passive_deletes=True)
@@ -97,8 +97,8 @@ class DiaryEntry(Base):
   meal_datetime: Mapped[datetime]
 
   user: Mapped["User"] = relationship(back_populates="diary")
-  meal: Mapped["Meal"] = relationship()
-  meal_products: Mapped[list["MealProduct"]] = relationship()
+  # meal: Mapped["Meal"] = relationship()
+  # meal_products: Mapped[list["MealProduct"]] = relationship()
   diary_meal_products: Mapped[list["DiaryMealProduct"]] = relationship(passive_deletes=True)
 
 class DiaryMealProduct(Base):

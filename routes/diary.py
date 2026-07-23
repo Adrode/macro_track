@@ -16,24 +16,43 @@ def post_diary(
   current_user: current_user_dependency
 ):
   try:
-    new_diary = models.UserDiary(
+    meal = session.scalars(select(models.Meal).where(models.Meal.id == data.meal_id)).first()
+
+    if not meal:
+      raise not_authorized_token_exc("Not authorized")
+
+    new_diary = models.DiaryEntry(
       user_id=current_user.id,
-      meal_id=data.meal_id,
+      meal_category=meal.category,
+      meal_name=meal.name,
       meal_datetime=data.meal_datetime
     )
 
     session.add(new_diary)
     session.flush()
 
-    if new_diary.meal.user_id != current_user.id:
-      raise not_authorized_token_exc("Not authorized")
-    
-    if new_diary.meal.is_active == False:
-      raise bad_request_exc
+    for item in meal.meal_products:
+      new_diary_meal_product = models.DiaryMealProduct(
+        diary_id=new_diary.id,
+        name=item.product.name,
+        kcal_per_100g=item.product.kcal_per_100g,
+        protein_per_100g=item.product.protein_per_100g,
+        fat_per_100g=item.product.fat_per_100g,
+        carbs_per_100g=item.product.carbs_per_100g,
+        grams=item.grams
+      )
+      session.add(new_diary_meal_product)
 
     session.commit()
     session.refresh(new_diary)
-    return new_diary
+
+    response = {
+      "id": new_diary.id,
+      "meal_name": new_diary.meal_name,
+      "meal_datetime": new_diary.meal_datetime
+    }
+    return response
+  
   except IntegrityError:
     raise bad_request_exc
   
@@ -43,7 +62,7 @@ def get_diary_by_id(
   session: session_dependency,
   current_user: current_user_dependency
 ):
-  diary = session.scalars(select(models.UserDiary).where(models.UserDiary.id == id)).first()
+  diary = session.scalars(select(models.DiaryEntry).where(models.DiaryEntry.id == id)).first()
 
   if not diary or diary.user_id != current_user.id:
     raise not_authorized_token_exc("Diary not authorized")
