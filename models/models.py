@@ -97,6 +97,8 @@ class DiaryEntry(Base):
   meal_datetime: Mapped[datetime]
 
   user: Mapped["User"] = relationship(back_populates="diary")
+  meal: Mapped["Meal"] = relationship()
+  meal_products: Mapped[list["MealProduct"]] = relationship()
   diary_meal_products: Mapped[list["DiaryMealProduct"]] = relationship(passive_deletes=True)
 
 class DiaryMealProduct(Base):
@@ -109,6 +111,7 @@ class DiaryMealProduct(Base):
   protein_per_100g: Mapped[int]
   fat_per_100g: Mapped[int]
   carbs_per_100g: Mapped[int]
+  grams: Mapped[int]
 
 class AIDetails(Base):
   __tablename__ = "ai_details"
