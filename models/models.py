@@ -46,8 +46,8 @@ class TrainerClientConnection(Base):
   started_at: Mapped[datetime] = mapped_column(nullable=True)
   finished_at: Mapped[datetime] = mapped_column(nullable=True)
 
-  trainer: Mapped[list["Trainer"]] = relationship(back_populates="client_connection")
-  client: Mapped[list["User"]] = relationship(back_populates="trainer_connection")
+  trainer: Mapped["Trainer"] = relationship(back_populates="client_connection")
+  client: Mapped["User"] = relationship(back_populates="trainer_connection")
 
 class Product(Base):
   __tablename__ = "products"

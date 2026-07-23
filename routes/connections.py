@@ -56,15 +56,20 @@ def accept_invitation_from_client(
         if connection.status == "closed":
             raise HTTPException(
                 status_code=400,
-                detail=f"Connection {connection.id} ID is already closed"
+                detail=f"Connection {connection.id} ID is already closed."
             )
         connection.status = "closed"
     
     if data.manage == "accepted":
+        if connection.status == "closed":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Connection {connection.id} ID is already closed. You can't reopen a closed connection."
+            )
         if connection.status == "accepted":
             raise HTTPException(
                 status_code=400,
-                detail=f"Connection {connection.id} ID is already accepted"
+                detail=f"Connection {connection.id} ID is already accepted."
             )
         connection.status = "accepted"
     
