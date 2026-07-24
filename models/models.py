@@ -106,7 +106,7 @@ class DiaryMealProduct(Base):
 
   id: Mapped[int] = mapped_column(primary_key=True)
   diary_id: Mapped[int] = mapped_column(ForeignKey("diaries_entry.id", ondelete="CASCADE"))
-  name: Mapped[str]
+  product_name: Mapped[str]
   kcal_per_100g: Mapped[int]
   protein_per_100g: Mapped[int]
   fat_per_100g: Mapped[int]
