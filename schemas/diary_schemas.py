@@ -12,7 +12,6 @@ class NewDiaryResponse(BaseModel):
 
 class DiariesResponse(BaseModel):
   id: int
-  meal_id: int
   meal_name: str
   meal_datetime: datetime
 

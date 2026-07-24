@@ -93,14 +93,14 @@ def get_diaries_by_date(
   session: session_dependency,
   current_user: current_user_dependency
 ):
-  diaries = session.scalars(select(models.UserDiary).where(
-    models.UserDiary.user_id == current_user.id,
-    func.date(models.UserDiary.meal_datetime) == date.date()
+  diaries = session.scalars(select(models.DiaryEntry).where(
+      models.DiaryEntry.user_id == current_user.id,
+      func.date(models.DiaryEntry.meal_datetime) == date.date()
     )
   ).all()
 
   if not diaries:
-    raise not_authorized_token_exc("Diaries not found")
+    raise not_authorized_token_exc("Not authorized")
   
   response = []
   daily_macro = {
@@ -114,15 +114,14 @@ def get_diaries_by_date(
     response.append({
       "id": item.id,
       "meal_datetime": item.meal_datetime,
-      "meal_id": item.meal_id,
-      "meal_name": item.meal.name
+      "meal_name": item.meal_name
     })
     
-    for i in item.meal.meals_products:
-      daily_macro["sum_of_kcal"] += i.product.kcal_per_100g * (i.grams / 100)
-      daily_macro["sum_of_protein"] += i.product.protein_per_100g * (i.grams / 100)
-      daily_macro["sum_of_fat"] += i.product.fat_per_100g * (i.grams / 100)
-      daily_macro["sum_of_carbs"] += i.product.carbs_per_100g * (i.grams / 100)
+    for i in item.diary_meal_products:
+      daily_macro["sum_of_kcal"] += i.kcal_per_100g * (i.grams / 100)
+      daily_macro["sum_of_protein"] += i.protein_per_100g * (i.grams / 100)
+      daily_macro["sum_of_fat"] += i.fat_per_100g * (i.grams / 100)
+      daily_macro["sum_of_carbs"] += i.carbs_per_100g * (i.grams / 100)
 
   daily_macro_left = {
     "kcal_left": current_user.kcal_daily_goal - daily_macro["sum_of_kcal"],
