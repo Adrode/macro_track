@@ -34,7 +34,7 @@ def post_diary(
     for item in meal.meal_products:
       new_diary_meal_product = models.DiaryMealProduct(
         diary_id=new_diary.id,
-        name=item.product.name,
+        product_name=item.product.name,
         kcal_per_100g=item.product.kcal_per_100g,
         protein_per_100g=item.product.protein_per_100g,
         fat_per_100g=item.product.fat_per_100g,
@@ -66,12 +66,23 @@ def get_diary_by_id(
 
   if not diary or diary.user_id != current_user.id:
     raise not_authorized_token_exc("Diary not authorized")
+
+  meal_products = []
+  for item in diary.diary_meal_products:
+    meal_products.append({
+      "product_name": item.product_name,
+      "kcal_per_100g": item.kcal_per_100g,
+      "protein_per_100g": item.protein_per_100g,
+      "fat_per_100g": item.fat_per_100g,
+      "carbs_per_100g": item.carbs_per_100g,
+      "grams": item.grams
+    })
   
   response = {
     "id": diary.id,
-    "meal_id": diary.meal_id,
-    "meal_name": diary.meal.name,
-    "meal_datetime": diary.meal_datetime
+    "meal_name": diary.meal_name,
+    "meal_datetime": diary.meal_datetime,
+    "meal_products": meal_products
   }
 
   return response
