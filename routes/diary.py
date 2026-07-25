@@ -100,7 +100,7 @@ def get_diaries_by_date(
   ).all()
 
   if not diaries:
-    raise not_authorized_token_exc("Not authorized")
+    raise not_authorized_token_exc("Diaries not found")
   
   response = []
   daily_macro = {
@@ -136,23 +136,22 @@ def get_diaries_by_date(
     "daily_macro_left": daily_macro_left
   }
 
-@router.get("/", response_model=list[diary_schemas.DiariesResponse])
+@router.get("/", response_model=list[diary_schemas.DiariesResponseByCategory])
 def get_all_diaries(
   session: session_dependency,
   current_user: current_user_dependency
 ):
-  diaries = session.scalars(select(models.UserDiary).where(models.UserDiary.user_id == current_user.id)).all()
+  diaries = session.scalars(select(models.DiaryEntry).where(models.DiaryEntry.user_id == current_user.id)).all()
 
   if not diaries:
     raise not_authorized_token_exc("Diaries not found")
   
   response = []
-
   for item in diaries:
     response.append({
       "id": item.id,
-      "meal_id": item.meal_id,
-      "meal_name": item.meal.name,
+      "meal_category": item.meal_category,
+      "meal_name": item.meal_name,
       "meal_datetime": item.meal_datetime
     })
 
@@ -164,7 +163,7 @@ def delete_diary(
   session: session_dependency,
   current_user: current_user_dependency  
 ):
-  diary = session.scalars(select(models.UserDiary).where(models.UserDiary.id == id)).first()
+  diary = session.scalars(select(models.DiaryEntry).where(models.DiaryEntry.id == id)).first()
 
   if not diary:
     raise not_authorized_token_exc("Diaries not found")

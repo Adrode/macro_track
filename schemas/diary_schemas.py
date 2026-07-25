@@ -1,5 +1,13 @@
 from pydantic import BaseModel
+from enum import Enum
 from datetime import datetime, timezone
+
+class MealCategory(str, Enum):
+  breakfast = "breakfast"
+  brunch = "brunch"
+  lunch = "lunch"
+  dinner = "dinner"
+  supper = "supper"
 
 class CreateDiary(BaseModel):
   meal_id: int
@@ -12,6 +20,12 @@ class NewDiaryResponse(BaseModel):
 
 class DiariesResponse(BaseModel):
   id: int
+  meal_name: str
+  meal_datetime: datetime
+
+class DiariesResponseByCategory(BaseModel):
+  id: int
+  meal_category: MealCategory
   meal_name: str
   meal_datetime: datetime
 
