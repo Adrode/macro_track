@@ -124,7 +124,7 @@ def patch_meal(
     raise not_authorized_token_exc("Not authorized")
 
   if data.meal_products:
-    for item in meal.meals_products:
+    for item in meal.meal_products:
       session.delete(item)
     
     session.flush()
@@ -169,7 +169,7 @@ def get_meal(
     "sum_of_carbs": 0
   }
 
-  for item in meal.meals_products:
+  for item in meal.meal_products:
     products_list.append({
       "product_id": item.product.id,
       "product_name": item.product.name,
@@ -213,7 +213,7 @@ def get_is_active_meals(
   response = []
 
   for meal in meals:
-    for item in meal.meals_products:
+    for item in meal.meal_products:
       macro_dict["sum_of_kcal"] += item.product.kcal_per_100g * (item.grams / 100)
       macro_dict["sum_of_protein"] += item.product.protein_per_100g * (item.grams / 100)
       macro_dict["sum_of_fat"] += item.product.fat_per_100g * (item.grams / 100)
@@ -259,7 +259,7 @@ def get_archived_meals(
   response = []
 
   for meal in meals:
-    for item in meal.meals_products:
+    for item in meal.meal_products:
       macro_dict["sum_of_kcal"] += item.product.kcal_per_100g * (item.grams / 100)
       macro_dict["sum_of_protein"] += item.product.protein_per_100g * (item.grams / 100)
       macro_dict["sum_of_fat"] += item.product.fat_per_100g * (item.grams / 100)
