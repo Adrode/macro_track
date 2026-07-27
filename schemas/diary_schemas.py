@@ -52,5 +52,5 @@ class PatchDiary(BaseModel):
 
 class PatchDiaryResponse(BaseModel):
   id: int
-  meal_id: int
+  meal_name: str
   meal_datetime: datetime

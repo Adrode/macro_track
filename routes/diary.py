@@ -181,23 +181,46 @@ def patch_diary(
   session: session_dependency,
   current_user: current_user_dependency
 ):
-  diary = session.scalars(select(models.UserDiary).where(models.UserDiary.id == id)).first()
+  diary = session.scalars(select(models.DiaryEntry).where(models.DiaryEntry.id == id)).first()
   
   if not diary:
     raise not_authorized_token_exc("Diaries not found")
   if diary.user_id != current_user.id:
     raise not_authorized_token_exc("Not authorized")
+
+  to_patch_diary = data.model_dump(exclude_unset=True)
   
   if data.meal_id:
     meal = session.scalars(select(models.Meal).where(models.Meal.id == data.meal_id)).first()
+    if not meal:
+      raise not_authorized_token_exc("Meal not found")
     if meal.user_id != current_user.id:
       raise not_authorized_token_exc("Meal not authorized")
-    if meal.is_active == False:
-      raise bad_request_exc
-  
-  to_patch = data.model_dump(exclude_unset=True)
 
-  for key, value in to_patch.items():
+    to_patch_diary.update({
+      "meal_category": meal.category,
+      "meal_name": meal.name
+    })
+
+    diary_meal_products = session.scalars(select(models.DiaryMealProduct).where(models.DiaryMealProduct.diary_id == diary.id)).all()
+
+    for item in diary_meal_products:
+      session.delete(item)
+    session.flush()
+
+    for item in meal.meal_products:
+      new_diary_meal_product = models.DiaryMealProduct(
+        diary_id=diary.id,
+        product_name=item.product.name,
+        kcal_per_100g=item.product.kcal_per_100g,
+        protein_per_100g=item.product.protein_per_100g,
+        fat_per_100g=item.product.fat_per_100g,
+        carbs_per_100g=item.product.carbs_per_100g,
+        grams=item.grams
+      )
+      session.add(new_diary_meal_product)
+
+  for key, value in to_patch_diary.items():
     setattr(diary, key, value)
 
   session.commit()

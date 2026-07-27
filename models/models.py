@@ -72,7 +72,7 @@ class Meal(Base):
   category: Mapped[str]
   name: Mapped[str]
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-  is_active: Mapped[bool] = mapped_column(default=True)                               # IS_ACTIVE DO USUNIĘCIA, ENDPOINT DO POPRAWY
+  is_active: Mapped[bool] = mapped_column(default=True)                               # IS_ACTIVE DO USUNIĘCIA, ENDPOINTY DO POPRAWY
 
   user: Mapped["User"] = relationship(back_populates="meals")
   meal_products: Mapped[list["MealProduct"]] = relationship(passive_deletes=True)
