@@ -22,14 +22,6 @@ class PatchMealWithProducts(BaseModel):
   name: str | None = None
   meal_products: list[MealProducts] | None = None
 
-class PatchMealIsActive(BaseModel):
-  is_active: bool
-
-class MealIsActiveResponse(BaseModel):
-  id: int
-  name: str
-  is_active: bool
-
 class MealResponse(BaseModel):
   id: int
   category: MealCategory
@@ -49,7 +41,6 @@ class MacroSummary(BaseModel):
 class MealWithProductsResponse(BaseModel):
   category: MealCategory
   name: str
-  is_active: bool
   products: list[ProductInMeal]
   macro: MacroSummary
 
@@ -57,5 +48,4 @@ class AllMealsByUserReponse(BaseModel):
   id: int
   category: MealCategory
   name: str
-  is_active: bool
   macro: MacroSummary
