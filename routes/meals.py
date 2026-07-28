@@ -1,6 +1,3 @@
-import os
-from dotenv import load_dotenv
-from openai import OpenAI, OpenAIError
 from fastapi import APIRouter, HTTPException
 from sqlalchemy import select, or_
 from sqlalchemy.exc import IntegrityError

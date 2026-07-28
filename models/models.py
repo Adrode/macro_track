@@ -72,7 +72,6 @@ class Meal(Base):
   category: Mapped[str]
   name: Mapped[str]
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
-  is_active: Mapped[bool] = mapped_column(default=True)                               # IS_ACTIVE DO USUNIĘCIA, ENDPOINTY DO POPRAWY
 
   user: Mapped["User"] = relationship(back_populates="meals")
   meal_products: Mapped[list["MealProduct"]] = relationship(passive_deletes=True)
@@ -97,8 +96,6 @@ class DiaryEntry(Base):
   meal_datetime: Mapped[datetime]
 
   user: Mapped["User"] = relationship(back_populates="diary")
-  # meal: Mapped["Meal"] = relationship()
-  # meal_products: Mapped[list["MealProduct"]] = relationship()
   diary_meal_products: Mapped[list["DiaryMealProduct"]] = relationship(passive_deletes=True)
 
 class DiaryMealProduct(Base):
@@ -124,10 +121,6 @@ class AIDetails(Base):
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
   user: Mapped["User"] = relationship(back_populates="ai_messages")
-
-
-# TRZEBA ZROBIĆ USERS_DIARY NA ZASADZIE SNAPSHOTÓW, Z WŁASNYM DIARY_MEAL_PRODUCTS (też na snapshotach)
-# MEAL I MEAL_PRODUCTS POZOSTAJĄ BEZ ZMIAN, PONIEWAŻ TO SĄ SZABLONY
 
 # TEMPLATES mealsów dla trenera? jako snapshot samych nazw produktów z których składać ma się meals?
 
