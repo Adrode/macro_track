@@ -36,17 +36,16 @@ def list_connections_with_clients(
 
     return response
 
-@router.patch("/clients/manage")
-def accept_invitation_from_client(
+@router.patch("/{id}/manage")
+def manage_invitation_from_client(
+    id: int,
     data: trainer_schemas.ManageConnection,
     session: session_dependency,
     current_trainer: current_trainer_dependency
 ):
     connection = session.scalars(select(models.TrainerClientConnection).where(
-        and_(
-            models.TrainerClientConnection.id == data.connection_id,
-            models.TrainerClientConnection.trainer_id == current_trainer.id
-        )
+        models.TrainerClientConnection.id == id,
+        models.TrainerClientConnection.trainer_id == current_trainer.id
     )).first()
 
     if not connection:
@@ -59,6 +58,7 @@ def accept_invitation_from_client(
                 detail=f"Connection {connection.id} ID is already closed."
             )
         connection.status = "closed"
+        connection.finished_at = datetime.now(timezone.utc)
     
     if data.manage == "accepted":
         if connection.status == "closed":
@@ -72,20 +72,20 @@ def accept_invitation_from_client(
                 detail=f"Connection {connection.id} ID is already accepted."
             )
         connection.status = "accepted"
-    
-    connection.started_at = datetime.now(timezone.utc)
+        connection.started_at = datetime.now(timezone.utc)
+
     session.commit()
     session.refresh(connection)
     
     return {"response": f"Connection with {connection.id} ID client {connection.status}"}
 
-@router.post("/invitation")
+@router.post("/{id}")
 def send_invitation_to_trainer(
-    data: trainer_schemas.CreateConnection,
+    id: int,
     session: session_dependency,
     current_user: current_user_dependency
 ):
-    trainer = session.scalars(select(models.Trainer).where(models.Trainer.id == data.trainer_id)).first()
+    trainer = session.scalars(select(models.Trainer).where(models.Trainer.id == id)).first()
     valid_connection = session.scalars(select(models.TrainerClientConnection).where(
             and_(
                 models.TrainerClientConnection.client_id == current_user.id,
@@ -103,7 +103,7 @@ def send_invitation_to_trainer(
         )
 
     new_connection = models.TrainerClientConnection(
-        trainer_id=data.trainer_id,
+        trainer_id=id,
         client_id=current_user.id,
         status="pending",
         created_at=datetime.now(timezone.utc)
@@ -143,17 +143,15 @@ def list_connections_with_trainers(
 
     return response
     
-@router.patch("/close")
+@router.patch("/{id}")
 def close_connection_with_trainer(
-    data: trainer_schemas.ManageConnection,
+    id: int,
     session: session_dependency,
     current_user: current_user_dependency
 ):
     connection = session.scalars(select(models.TrainerClientConnection).where(
-        and_(
-            models.TrainerClientConnection.id == data.connection_id,
-            models.TrainerClientConnection.client_id == current_user.id
-        )
+        models.TrainerClientConnection.id == id,
+        models.TrainerClientConnection.client_id == current_user.id
     )).first()
 
     if connection.status == "closed":

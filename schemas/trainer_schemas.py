@@ -15,9 +15,6 @@ class TrainerReponse(BaseModel):
     email: EmailStr
     username: str
 
-class CreateConnection(BaseModel):
-    trainer_id: int
-
 class ListConnectionStatusResponse(BaseModel):
     connection_id: int
     client_id: int
@@ -31,5 +28,4 @@ class ListConnectionStatusWithTrainerResponse(BaseModel):
     status: StatusType
 
 class ManageConnection(BaseModel):
-    connection_id: int
     manage: ManageStatusType
