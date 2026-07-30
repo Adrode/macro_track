@@ -2,8 +2,9 @@ from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-from schemas import user_schemas, auth_schemas, trainer_schemas
+from schemas import user_schemas, trainer_schemas
 from models import models
+from schemas import auth_schemas
 from utils.dependencies import session_dependency
 from utils.exceptions import not_found_exc, bad_request_exc, not_authorized_token_exc
 from authentication.pwd_hash import hash_password, verify_password

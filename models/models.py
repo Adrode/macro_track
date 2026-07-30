@@ -1,6 +1,5 @@
 from datetime import datetime
-from typing import Optional
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, CheckConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 class Base(DeclarativeBase):
@@ -51,6 +50,12 @@ class TrainerUserConnection(Base):
 
 class Product(Base):
   __tablename__ = "products"
+  __table_args__ = (
+    CheckConstraint(
+      "((user_id IS NULL) AND (trainer_id IS NOT NULL)) OR ((user_id IS NOT NULL) AND (trainer_id IS NULL)) OR ((user_id IS NULL) AND (trainer_id IS NULL))",
+      name="product_owner_check",
+    ),
+  )
 
   id: Mapped[int] = mapped_column(primary_key=True)
   category: Mapped[str]
