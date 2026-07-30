@@ -22,7 +22,7 @@ class User(Base):
   products: Mapped[list["Product"]] = relationship(back_populates="user", passive_deletes=True)
   diary: Mapped[list["DiaryEntry"]] = relationship(back_populates="user", passive_deletes=True)
   ai_messages: Mapped[list["AIDetails"]] = relationship(back_populates="user", passive_deletes=True)
-  trainer_connection: Mapped[list["TrainerClientConnection"]] = relationship(back_populates="client")
+  trainer_connection: Mapped[list["TrainerUserConnection"]] = relationship(back_populates="user")
 
 class Trainer(Base):
   __tablename__ = "trainers"
@@ -32,22 +32,22 @@ class Trainer(Base):
   username: Mapped[str] = mapped_column(unique=True)
   hashed_password: Mapped[str]
 
-  client_connection: Mapped[list["TrainerClientConnection"]] = relationship(back_populates="trainer")
+  user_connection: Mapped[list["TrainerUserConnection"]] = relationship(back_populates="trainer")
   products: Mapped[list["Product"]] = relationship(back_populates="trainer", passive_deletes=True)
 
-class TrainerClientConnection(Base):
-  __tablename__  = "trainer_client"
+class TrainerUserConnection(Base):
+  __tablename__  = "trainer_user"
 
   id: Mapped[int] = mapped_column(primary_key=True)
   trainer_id: Mapped[int] = mapped_column(ForeignKey("trainers.id"))
-  client_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+  user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
   status: Mapped[str]
   created_at: Mapped[datetime]
   started_at: Mapped[datetime] = mapped_column(nullable=True)
   finished_at: Mapped[datetime] = mapped_column(nullable=True)
 
-  trainer: Mapped["Trainer"] = relationship(back_populates="client_connection")
-  client: Mapped["User"] = relationship(back_populates="trainer_connection")
+  trainer: Mapped["Trainer"] = relationship(back_populates="user_connection")
+  user: Mapped["User"] = relationship(back_populates="trainer_connection")
 
 class Product(Base):
   __tablename__ = "products"
