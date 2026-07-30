@@ -36,15 +36,15 @@ def list_connections(
 
     return response
 
-@router.patch("/{id}/manage")
+@router.patch("/{conn_id}/manage")
 def manage_invitation(
-    id: int,
+    conn_id: int,
     data: trainer_schemas.ManageConnection,
     session: session_dependency,
     current_trainer: current_trainer_dependency
 ):
     connection = session.scalars(select(models.TrainerUserConnection).where(
-        models.TrainerUserConnection.id == id,
+        models.TrainerUserConnection.id == conn_id,
         models.TrainerUserConnection.trainer_id == current_trainer.id
     )).first()
 

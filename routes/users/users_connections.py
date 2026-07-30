@@ -8,13 +8,13 @@ from datetime import datetime, timezone
 
 router = APIRouter()
 
-@router.post("/{id}")
+@router.post("/{trainer_id}")
 def send_invitation(
-    id: int,
+    trainer_id: int,
     session: session_dependency,
     current_user: current_user_dependency
 ):
-    trainer = session.scalars(select(models.Trainer).where(models.Trainer.id == id)).first()
+    trainer = session.scalars(select(models.Trainer).where(models.Trainer.id == trainer_id)).first()
     valid_connection = session.scalars(select(models.TrainerUserConnection).where(
             models.TrainerUserConnection.user_id == current_user.id,
             models.TrainerUserConnection.status != "closed"
@@ -30,7 +30,7 @@ def send_invitation(
         )
 
     new_connection = models.TrainerUserConnection(
-        trainer_id=id,
+        trainer_id=trainer_id,
         user_id=current_user.id,
         status="pending",
         created_at=datetime.now(timezone.utc)
@@ -79,14 +79,14 @@ def list_connections(
 
     return response
     
-@router.patch("/{id}")
+@router.patch("/{conn_id}")
 def close_connection(
-    id: int,
+    conn_id: int,
     session: session_dependency,
     current_user: current_user_dependency
 ):
     connection = session.scalars(select(models.TrainerUserConnection).where(
-        models.TrainerUserConnection.id == id,
+        models.TrainerUserConnection.id == conn_id,
         models.TrainerUserConnection.user_id == current_user.id
     )).first()
 
