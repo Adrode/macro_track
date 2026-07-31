@@ -1,7 +1,9 @@
 from fastapi import APIRouter
+from sqlalchemy import select, and_, or_
 from models import models
 from schemas import product_schemas
 from utils.dependencies import session_dependency, current_trainer_dependency
+from utils.exceptions import not_authorized_token_exc, bad_request_exc
 
 router = APIRouter()
 
@@ -26,3 +28,41 @@ def post_product(
     session.refresh(new_product)
 
     return new_product
+
+@router.get("/{id}", response_model=product_schemas.ProductResponse)
+def get_product(
+    id: int,
+    session: session_dependency,
+    current_trainer: current_trainer_dependency
+):
+    product = session.scalars(select(models.Product).where(
+        models.Product.id == id,
+        models.Product.trainer_id == current_trainer.id
+    )).first()
+
+    if not product:
+        raise not_authorized_token_exc("Not authorized")
+    if product.user_id != None:
+        raise bad_request_exc
+
+    return product
+
+@router.get("/", response_model=list[product_schemas.ProductResponse])
+def get_products(
+    session: session_dependency,
+    current_trainer: current_trainer_dependency
+):
+    products = session.scalars(select(models.Product).where(
+        or_(
+            models.Product.trainer_id == current_trainer.id,
+            and_(
+                models.Product.user_id == None,
+                models.Product.trainer_id == None
+            )
+        )
+    )).all()
+
+    if not products:
+        raise not_authorized_token_exc("Not authorized")
+
+    return products
