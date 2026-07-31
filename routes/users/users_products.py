@@ -38,12 +38,15 @@ def get_product(
   session: session_dependency,
   current_user: current_user_dependency
 ):
-  product = session.scalars(select(models.Product).where(models.Product.id == id)).first()
+  product = session.scalars(select(models.Product).where(
+      models.Product.id == id,
+      models.Product.user_id == current_user.id
+    )).first()
 
   if not product:
-    raise not_found_exc
-  if product.user_id != None and product.user_id != current_user.id:
     raise not_authorized_token_exc("Not authorized")
+  if product.trainer_id != None:
+    raise bad_request_exc
   
   return product
 
