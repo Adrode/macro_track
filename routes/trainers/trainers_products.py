@@ -85,3 +85,28 @@ def delete_product(
     session.commit()
 
     return {"detail": f"Product with ID {product.id} deleted"}
+
+@router.patch("/{id}", response_model=product_schemas.ProductResponse)
+def patch_product(
+    id: int,
+    data: product_schemas.PatchProduct,
+    session: session_dependency,
+    current_trainer: current_trainer_dependency
+):
+    product = session.scalars(select(models.Product).where(
+        models.Product.id == id,
+        models.Product.trainer_id == current_trainer.id
+    )).first()
+
+    if not product:
+        raise not_authorized_token_exc("Not authorized")
+
+    patch_data = data.model_dump(exclude_unset=True)
+
+    for key, value in patch_data.items():
+        setattr(product, key, value)
+
+    session.commit()
+    session.refresh(product)
+
+    return product

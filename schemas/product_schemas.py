@@ -23,3 +23,11 @@ class ProductResponse(BaseModel):
   protein_per_100g: int
   fat_per_100g: int
   carbs_per_100g: int
+
+class PatchProduct(BaseModel):
+  category: ProductCategory | None = None
+  name: str | None = None
+  kcal_per_100g: int | None = None
+  protein_per_100g: int | None = None
+  fat_per_100g: int | None = None
+  carbs_per_100g: int  | None = None
