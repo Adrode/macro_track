@@ -66,3 +66,22 @@ def get_products(
         raise not_authorized_token_exc("Not authorized")
 
     return products
+
+@router.delete("/{id}")
+def delete_product(
+    id: int,
+    session: session_dependency,
+    current_trainer: current_trainer_dependency
+):
+    product = session.scalars(select(models.Product).where(
+        models.Product.id == id,
+        models.Product.trainer_id == current_trainer.id
+    )).first()
+
+    if not product:
+        raise not_authorized_token_exc("Not authorized")
+
+    session.delete(product)
+    session.commit()
+
+    return {"detail": f"Product with ID {product.id} deleted"}

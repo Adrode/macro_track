@@ -23,4 +23,3 @@ class ProductResponse(BaseModel):
   protein_per_100g: int
   fat_per_100g: int
   carbs_per_100g: int
-  owner: str
