@@ -26,6 +26,7 @@ class MealResponse(BaseModel):
   id: int
   category: MealCategory
   name: str
+  source: str
 
 class ProductInMeal(BaseModel):
   product_id: int
@@ -43,9 +44,11 @@ class MealWithProductsResponse(BaseModel):
   name: str
   products: list[ProductInMeal]
   macro: MacroSummary
+  source: str
 
 class AllMealsByUserReponse(BaseModel):
   id: int
   category: MealCategory
   name: str
   macro: MacroSummary
+  source: str

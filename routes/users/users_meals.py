@@ -27,7 +27,8 @@ def add_meal(
     meal = models.Meal(
       category=data.category,
       name=data.name,
-      user_id=current_user.id
+      user_id=current_user.id,
+      source="user"
     )
     
     session.add(meal)
@@ -156,7 +157,8 @@ def get_meal(
     "category": meal.category,
     "name": meal.name,
     "products": products_list,
-    "macro": macro_dict
+    "macro": macro_dict,
+    "source": meal.source
   }
 
   return response
@@ -191,7 +193,8 @@ def get_meals(
       "id": meal.id,
       "name": meal.name,
       "category": meal.category,
-      "macro": macro_dict
+      "macro": macro_dict,
+      "source": meal.source
     })
 
     macro_dict = {

@@ -77,6 +77,7 @@ class Meal(Base):
   category: Mapped[str]
   name: Mapped[str]
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+  source: Mapped[str]
 
   user: Mapped["User"] = relationship(back_populates="meals")
   meal_products: Mapped[list["MealProduct"]] = relationship(passive_deletes=True)
