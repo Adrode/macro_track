@@ -8,7 +8,7 @@ from utils.exceptions import not_authorized_token_exc, bad_request_exc
 
 router = APIRouter()
 
-@router.post("/{user_id}") # , response_model=meal_schemas.MealResponse
+@router.post("/{user_id}")
 def post_meal_for_user(
     user_id: int,
     data: meal_schemas.CreateMealWithProducts,
@@ -17,15 +17,16 @@ def post_meal_for_user(
 ):
     try:
         user = session.scalars(select(models.User).where(models.User.id == user_id)).first()
-        
+        connection = session.scalars(select(models.TrainerUserConnection).where(
+            models.TrainerUserConnection.status == "accepted",
+            models.TrainerUserConnection.user_id == user.id,
+            models.TrainerUserConnection.trainer_id == current_trainer.id
+        )).first()
+
         if not user:
             raise not_authorized_token_exc("Not authorized")
-
-        trainers_products = []
-        for item in data.meal_products:
-            new_product = session.scalars(select(models.Product).where(
-                models.Product.id == item.product_id
-            )).first()
+        if not connection:
+            raise not_authorized_token_exc("Not authorized")
 
         new_meal_for_user = models.Meal(
             category=data.category,
@@ -37,29 +38,38 @@ def post_meal_for_user(
         session.add(new_meal_for_user)
         session.flush()
 
-        new_user_products = []
-        for item in trainers_products:
-            new_product_for_user = models.Product(
-                category=item.category,
-                name=item.name,
-                kcal_per_100g=item.kcal_per_100g,
-                protein_per_100g=item.protein_per_100g,
-                fat_per_100g=item.fat_per_100g,
-                carbs_per_100g=item.carbs_per_100g,
-                user_id=user.id
-            )
-            session.add(new_product_for_user)
-            new_user_products.append(new_product_for_user)
+        for item in data.meal_products:
+            product = session.scalars(select(models.Product).where(
+                models.Product.id == item.product_id
+            )).first()
 
-        session.flush()
+            if not product:
+                raise not_authorized_token_exc("Not authorized")
 
-        for new_product, item in zip(new_user_products, data.meal_products):
-            new_meal_product_for_user = models.MealProduct(
+            if product.trainer_id == current_trainer.id:
+                new_product_for_user = models.Product(
+                    category=product.category,
+                    name=product.name,
+                    kcal_per_100g=product.kcal_per_100g,
+                    protein_per_100g=product.protein_per_100g,
+                    fat_per_100g=product.fat_per_100g,
+                    carbs_per_100g=product.carbs_per_100g,
+                    user_id=user.id,
+                    trainer_id=None
+                )
+                session.add(new_product_for_user)
+                session.flush()
+                product_id_for_meal = new_product_for_user.id
+            elif product.trainer_id is None and product.user_id is None:
+                product_id_for_meal = product.id
+            else:
+                raise not_authorized_token_exc("Not authorized")
+
+            session.add(models.MealProduct(
                 meal_id=new_meal_for_user.id,
-                product_id=new_product.id,
+                product_id=product_id_for_meal,
                 grams=item.grams
-            )
-            session.add(new_meal_product_for_user)
+            ))
 
         session.commit()
         session.refresh(new_meal_for_user)

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from sqlalchemy import select, or_
+from sqlalchemy import select, and_, or_
 from sqlalchemy.exc import IntegrityError
 from utils.dependencies import session_dependency, current_user_dependency
 from utils.exceptions import not_found_exc, bad_request_exc, not_authorized_token_exc
@@ -57,7 +57,10 @@ def get_products(
 ):
   products = session.scalars(select(models.Product).where(
     or_(
-      models.Product.user_id == None,
+      and_(
+        models.Product.user_id == None,
+        models.Product.trainer_id == None
+      ),
       models.Product.user_id == current_user.id
     )
   )).all()
