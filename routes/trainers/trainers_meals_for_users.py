@@ -8,7 +8,7 @@ from utils.exceptions import not_authorized_token_exc, bad_request_exc
 
 router = APIRouter()
 
-@router.post("/{user_id}")
+@router.post("/{user_id}", response_model=meal_schemas.MealResponse)
 def post_meal_for_user(
     user_id: int,
     data: meal_schemas.CreateMealWithProducts,
@@ -78,3 +78,4 @@ def post_meal_for_user(
 
     except IntegrityError:
         raise bad_request_exc
+
