@@ -37,7 +37,13 @@ def get_product(
 ):
     product = session.scalars(select(models.Product).where(
         models.Product.id == id,
-        models.Product.trainer_id == current_trainer.id
+        or_(
+            models.Product.trainer_id == current_trainer.id,
+            and_(
+                models.Product.user_id == None,
+                models.Product.trainer_id == None
+            )
+        )
     )).first()
 
     if not product:
