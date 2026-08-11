@@ -81,8 +81,60 @@ def post_meal_for_user(
 
 
 @router.get("/{user_id}/{meal_id}")
-def get_user_meal():
-    pass
+def get_user_meal(
+    user_id: int,
+    meal_id: int,
+    session: session_dependency,
+    current_trainer: current_trainer_dependency
+):
+    user = session.scalars(select(models.User).where(models.User.id == user_id)).first()
+    connection = session.scalars(select(models.TrainerUserConnection).where(
+        models.TrainerUserConnection.status == "accepted",
+        models.TrainerUserConnection.user_id == user_id,
+        models.TrainerUserConnection.trainer_id == current_trainer.id
+    )).first()
+
+    if not user:
+        raise not_authorized_token_exc("Not authorized")
+    if not connection or connection.status != "accepted":
+        raise not_authorized_token_exc("No connection")
+
+    user_meal = session.scalars(select(models.Meal).where(
+        models.Meal.id == meal_id,
+        models.Meal.user_id == user.id
+    )).first()
+
+    if not user_meal:
+        raise not_authorized_token_exc("Not authorized")
+
+    products_list = []
+    macro_dict = {
+        "sum_of_kcal": 0,
+        "sum_of_protein": 0,
+        "sum_of_fat": 0,
+        "sum_of_carbs": 0
+    }
+
+    for item in user_meal.meal_products:
+        products_list.append({
+            "product_id": item.product_id,
+            "product_name": item.product.name,
+            "grams": item.grams
+        })
+        macro_dict["sum_of_kcal"] += item.product.kcal_per_100g * (item.grams / 100)
+        macro_dict["sum_of_protein"] += item.product.protein_per_100g * (item.grams / 100)
+        macro_dict["sum_of_fat"] += item.product.fat_per_100g * (item.grams / 100)
+        macro_dict["sum_of_carbs"] += item.product.carbs_per_100g * (item.grams / 100)
+
+    response = {
+        "category": user_meal.category,
+        "name": user_meal.name,
+        "products": products_list,
+        "macro": macro_dict,
+        "source": user_meal.source
+    }
+
+    return response
 
 
 @router.get("/{user_id}", response_model=list[meal_schemas.MealResponse])
