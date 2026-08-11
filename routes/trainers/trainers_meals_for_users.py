@@ -25,8 +25,8 @@ def post_meal_for_user(
 
         if not user:
             raise not_authorized_token_exc("Not authorized")
-        if not connection:
-            raise not_authorized_token_exc("Not authorized")
+        if not connection or connection.status != "accepted":
+            raise not_authorized_token_exc("No connection")
 
         new_meal_for_user = models.Meal(
             category=data.category,
@@ -79,3 +79,28 @@ def post_meal_for_user(
     except IntegrityError:
         raise bad_request_exc
 
+
+@router.get("/{user_id}/{meal_id}")
+def get_user_meal():
+    pass
+
+
+@router.get("/{user_id}", response_model=list[meal_schemas.MealResponse])
+def get_user_meals(
+    user_id: int,
+    session: session_dependency,
+    current_trainer: current_trainer_dependency
+):
+    user = session.scalars(select(models.User).where(models.User.id == user_id)).first()
+    connection = session.scalars(select(models.TrainerUserConnection).where(
+        models.TrainerUserConnection.status == "accepted",
+        models.TrainerUserConnection.user_id == user_id,
+        models.TrainerUserConnection.trainer_id == current_trainer.id
+    )).first()
+
+    if not user:
+        raise not_authorized_token_exc("Not authorized")
+    if not connection or connection.status != "accepted":
+        raise not_authorized_token_exc("No connection")
+
+    return user.meals
