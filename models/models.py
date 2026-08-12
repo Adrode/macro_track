@@ -22,6 +22,7 @@ class User(Base):
   diary: Mapped[list["DiaryEntry"]] = relationship(back_populates="user", passive_deletes=True)
   ai_messages: Mapped[list["AIDetails"]] = relationship(back_populates="user", passive_deletes=True)
   trainer_connection: Mapped[list["TrainerUserConnection"]] = relationship(back_populates="user")
+  training_plans: Mapped[list["TrainingPlan"]] = relationship(back_populates="user", passive_deletes=True)
 
 class Trainer(Base):
   __tablename__ = "trainers"
@@ -128,8 +129,59 @@ class AIDetails(Base):
 
   user: Mapped["User"] = relationship(back_populates="ai_messages")
 
-# TEMPLATES mealsów dla trenera? jako snapshot samych nazw produktów z których składać ma się meals?
+class TrainingPlan(Base):
+  __tablename__ = "training_plans"
 
-# TRENER MA WŁASNE PRODUKTY, a jak używa tego produktu dla meala który dodaje użytkownikowi, to dla tego usera w tabeli
-# musi stworzyć się kopia tego produktu; najlepiej w formie trainer_id w products i tworzyć kopię; wtedy albo user_id albo trainer_id dla
-# jednego wpisu musi być Null, bo ten sam rekord nie może mieć ownera trainer i user jednocześnie, ponieważ ma się to opierać na kopiach
+  id: Mapped[int] = mapped_column(primary_key=True)
+  name: Mapped[str]
+  description: Mapped[str] = mapped_column(nullable=True)
+  user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+
+  user: Mapped["User"] = relationship(back_populates="training_plan")
+  training_units: Mapped[list["TrainingUnit"]] = relationship(back_populates="training_plans", passive_deletes=True)
+
+class TrainingUnit(Base):
+  __tablename__ = "training_units"
+
+  id: Mapped[int] = mapped_column(primary_key=True)
+  training_plan_id: Mapped[int] = mapped_column(ForeignKey("training_plans.id", ondelete="CASCADE"))
+  name: Mapped[str]
+  description: Mapped[str] = mapped_column(nullable=True)
+
+  training_plan: Mapped["TrainingPlan"] = relationship(back_populates="training_units")
+  training_exercises: Mapped[list["TrainingExercise"]] = relationship(back_populates="training_unit", passive_deletes=True)
+
+class TrainingExercise(Base):
+  __tablename__ = "training_exercises"
+
+  id: Mapped[int] = mapped_column(primary_key=True)
+
+  training_unit_id: Mapped[int] = mapped_column(ForeignKey("training_units.id", ondelete="CASCADE"))
+  exercise_id: Mapped[int] = mapped_column(ForeignKey("exercises.id", ondelete="CASCADE"))
+  exercise_order: Mapped[int]
+
+  training_unit: Mapped["TrainingUnit"] = relationship(back_populates="training_exercises")
+  sets: Mapped[list["TrainingExerciseSet"]] = relationship(back_populates="training_exercise", passive_deletes=True)
+
+class TrainingExerciseSet(Base):
+  __tablename__ = "training_exercises_sets"
+
+  id: Mapped[int] = mapped_column(primary_key=True)
+
+  training_exercise_id: Mapped[int] = mapped_column(ForeignKey("training_exercises.id", ondelete="CASCADE"))
+  set_order: Mapped[int]
+  repetitions: Mapped[int]
+
+  training_exercise: Mapped["TrainingExercise"] = relationship(back_populates="sets")
+
+class Exercise(Base):
+  __tablename__ = "exercises"
+
+  id: Mapped[int] = mapped_column(primary_key=True)
+
+  name: Mapped[str]
+  main_muscle: Mapped[str]
+  side_muscle: Mapped[str] = mapped_column(nullable=True)
+  description: Mapped[str] = mapped_column(nullable=True)
+  
+# TEMPLATES mealsów dla trenera? jako snapshot samych nazw produktów z których składać ma się meals?
