@@ -155,7 +155,6 @@ class TrainingExercise(Base):
   __tablename__ = "training_exercises"
 
   id: Mapped[int] = mapped_column(primary_key=True)
-
   training_unit_id: Mapped[int] = mapped_column(ForeignKey("training_units.id", ondelete="CASCADE"))
   exercise_id: Mapped[int] = mapped_column(ForeignKey("exercises.id", ondelete="CASCADE"))
   exercise_order: Mapped[int]
@@ -167,7 +166,6 @@ class TrainingExerciseSet(Base):
   __tablename__ = "training_exercises_sets"
 
   id: Mapped[int] = mapped_column(primary_key=True)
-
   training_exercise_id: Mapped[int] = mapped_column(ForeignKey("training_exercises.id", ondelete="CASCADE"))
   set_order: Mapped[int]
   repetitions: Mapped[int]
@@ -178,10 +176,43 @@ class Exercise(Base):
   __tablename__ = "exercises"
 
   id: Mapped[int] = mapped_column(primary_key=True)
-
   name: Mapped[str]
   main_muscle: Mapped[str]
   side_muscle: Mapped[str] = mapped_column(nullable=True)
   description: Mapped[str] = mapped_column(nullable=True)
+
+class WorkoutLog(Base):
+  __tablename__ = "workout_logs"
+
+  id: Mapped[int] = mapped_column(primary_key=True)
+  name: Mapped[str]
+  date: Mapped[datetime]
+  duration: Mapped[int] = mapped_column(nullable=True)
+
+  exercises: Mapped[list["WorkoutLogExercise"]] = relationship(back_populates="workout_log", passive_deletes=True)
+
+class WorkoutLogExercise(Base):
+  __tablename__ = "workout_log_exercises"
+
+  id: Mapped[int] = mapped_column(primary_key=True)
+  exercise_name: Mapped[str]
+  workout_log_id: Mapped[int] = mapped_column(ForeignKey("workout_logs.id", ondelete="CASCADE"))
+  exercise_order: Mapped[int]
+
+  workout_log: Mapped["WorkoutLog"] = relationship(back_populates="exercises")
+  sets: Mapped[list["WorkoutLogExerciseSet"]] = relationship(back_populates="exercise", passive_deletes=True)
+
+class WorkoutLogExerciseSet(Base):
+  __tablename__ = "workout_log_exercise_sets"
+  
+  id: Mapped[int] = mapped_column(primary_key=True)
+  workout_log_exercise_id: Mapped[int] = mapped_column(ForeignKey("workout_log_exercises.id", ondelete="CASCADE"))
+  set_order: Mapped[int]
+  repetitions: Mapped[int]
+  weight: Mapped[int] = mapped_column(nullable=True)
+
+  exercise: Mapped["WorkoutLogExercise"] = relationship(back_populates="sets")
+
+  
   
 # TEMPLATES mealsów dla trenera? jako snapshot samych nazw produktów z których składać ma się meals?
