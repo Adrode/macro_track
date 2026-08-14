@@ -139,8 +139,8 @@ class TrainingPlan(Base):
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
   source: Mapped[str]
 
-  user: Mapped["User"] = relationship(back_populates="training_plan")
-  training_units: Mapped[list["TrainingUnit"]] = relationship(back_populates="training_plans", passive_deletes=True)
+  user: Mapped["User"] = relationship(back_populates="training_plans")
+  training_units: Mapped[list["TrainingUnit"]] = relationship(back_populates="training_plan", passive_deletes=True)
 
 class TrainingUnit(Base):
   __tablename__ = "training_units"
