@@ -1,6 +1,7 @@
 from datetime import datetime
-from sqlalchemy import ForeignKey, CheckConstraint
+from sqlalchemy import ForeignKey, CheckConstraint, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
+from sqlalchemy.dialects.postgresql import ARRAY
 
 class Base(DeclarativeBase):
   pass
@@ -136,6 +137,7 @@ class TrainingPlan(Base):
   name: Mapped[str]
   description: Mapped[str] = mapped_column(nullable=True)
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+  source: Mapped[str]
 
   user: Mapped["User"] = relationship(back_populates="training_plan")
   training_units: Mapped[list["TrainingUnit"]] = relationship(back_populates="training_plans", passive_deletes=True)
@@ -177,8 +179,8 @@ class Exercise(Base):
 
   id: Mapped[int] = mapped_column(primary_key=True)
   name: Mapped[str]
-  main_muscle: Mapped[str]
-  side_muscle: Mapped[str] = mapped_column(nullable=True)
+  main_muscles: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+  side_muscles: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
   description: Mapped[str] = mapped_column(nullable=True)
 
 class WorkoutLog(Base):
@@ -212,7 +214,5 @@ class WorkoutLogExerciseSet(Base):
   weight: Mapped[int] = mapped_column(nullable=True)
 
   exercise: Mapped["WorkoutLogExercise"] = relationship(back_populates="sets")
-
-  
   
 # TEMPLATES mealsów dla trenera? jako snapshot samych nazw produktów z których składać ma się meals?

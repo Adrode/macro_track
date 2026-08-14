@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from routes.trainers import trainers_auth, trainers_connections, trainers, trainers_products, trainers_meals_for_users
-from routes.users import users_auth, users_ai, users_connections, users, users_diary, users_meals, users_products
+from routes.users import users_auth, users_ai, users_connections, users, users_diary, users_meals, users_products, users_training_plans
 
 app = FastAPI()
 
@@ -16,3 +16,4 @@ app.include_router(users_connections.router, prefix="/user/connections", tags=["
 app.include_router(users_products.router, prefix="/user/products", tags=["Users products"])
 app.include_router(users_meals.router, prefix="/user/meals", tags=["Users meals"])
 app.include_router(users_diary.router, prefix="/user/diary", tags=["Users diary"])
+app.include_router(users_training_plans.router, prefix="/user/training_plan", tags=["Users training plans"])
