@@ -176,12 +176,20 @@ class TrainingExerciseSet(Base):
 
 class Exercise(Base):
   __tablename__ = "exercises"
+  __table_args__ = (
+      CheckConstraint(
+        "((user_id IS NULL) AND (trainer_id IS NOT NULL)) OR ((user_id IS NOT NULL) AND (trainer_id IS NULL)) OR ((user_id IS NULL) AND (trainer_id IS NULL))",
+        name="exercise_owner_check",
+      ),
+    )
 
   id: Mapped[int] = mapped_column(primary_key=True)
   name: Mapped[str]
   main_muscles: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
   side_muscles: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
   description: Mapped[str] = mapped_column(nullable=True)
+  user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
+  trainer_id: Mapped[int] = mapped_column(ForeignKey("trainers.id", ondelete="CASCADE"), nullable=True)
 
 class WorkoutLog(Base):
   __tablename__ = "workout_logs"
