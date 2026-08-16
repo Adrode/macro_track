@@ -68,3 +68,23 @@ def get_exercises(
         raise not_authorized_token_exc("Not authorized")
 
     return exercises
+
+@router.delete("/{id}")
+def delete_exercise(
+    id: int,
+    session: session_dependency,
+    current_user: current_user_dependency
+):
+    exercise = session.scalars(select(models.Exercise).where(
+        models.Exercise.id == id,
+        models.Exercise.user_id == current_user.id,
+        models.Exercise.trainer_id == None
+    )).first()
+
+    if not exercise or exercise.user_id != current_user.id:
+        raise not_authorized_token_exc("Not authorized")
+
+    session.delete(exercise)
+    session.commit()
+
+    return {"detail": f"Exercise with ID {id} deleted"}
