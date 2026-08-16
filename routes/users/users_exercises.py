@@ -88,3 +88,33 @@ def delete_exercise(
     session.commit()
 
     return {"detail": f"Exercise with ID {id} deleted"}
+
+@router.patch("/{id}", response_model=exercise_schemas.ExerciseResponse)
+def patch_exercise(
+    id: int,
+    data: exercise_schemas.PatchExercise,
+    session: session_dependency,
+    current_user: current_user_dependency
+):
+    exercise = session.scalars(select(models.Exercise).where(
+        models.Exercise.id == id,
+        or_(
+            models.Exercise.user_id == current_user.id,
+            and_(
+                models.Exercise.user_id == None,
+                models.Exercise.trainer_id == None
+            )
+        )
+    )).first()
+
+    if not exercise:
+        raise not_authorized_token_exc("Not authorized")
+
+    to_patch = data.model_dump(exclude_unset=True)
+    for key, value in to_patch.items():
+        setattr(exercise, key, value)
+
+    session.commit()
+    session.refresh(exercise)
+
+    return exercise

@@ -23,10 +23,6 @@ class Muscles(str, Enum):
     calves = "calves"
     tibialis = "tibialis"
 
-class TrainingPlanSource(str, Enum):
-    user = "user"
-    trainer = "trainer"
-
 class CreateExercise(BaseModel):
     name: str
     main_muscles: list[Muscles]
@@ -40,7 +36,8 @@ class ExerciseResponse(BaseModel):
     side_muscles: list[Muscles]
     description: str | None = None
 
-class CreateTrainingPlan(BaseModel):
-    name: str
-    description: str | None
-    source: TrainingPlanSource
+class PatchExercise(BaseModel):
+    name: str | None = None
+    main_muscles: list[Muscles] | None = None
+    side_muscles: list[Muscles] | None = None
+    description: str | None = None
