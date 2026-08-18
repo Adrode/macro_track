@@ -149,6 +149,7 @@ class TrainingUnit(Base):
   training_plan_id: Mapped[int] = mapped_column(ForeignKey("training_plans.id", ondelete="CASCADE"))
   name: Mapped[str]
   description: Mapped[str] = mapped_column(nullable=True)
+  unit_order: Mapped[int]
 
   training_plan: Mapped["TrainingPlan"] = relationship(back_populates="training_units")
   training_exercises: Mapped[list["TrainingExercise"]] = relationship(back_populates="training_unit", passive_deletes=True)
