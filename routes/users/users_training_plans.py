@@ -7,7 +7,7 @@ from utils.exceptions import not_authorized_token_exc
 
 router = APIRouter()
 
-@router.post("/", response_model=training_plans_schemas.TrainingPlanResponse)
+@router.post("/")
 def create_training_plan(
     data: training_plans_schemas.CreateTrainingPlan,
     session: session_dependency,
@@ -67,4 +67,46 @@ def create_training_plan(
     session.commit()
     session.refresh(new_training_plan)
 
-    return new_training_plan
+    return {"detail": f"Training plan {new_training_plan.name} created."}
+
+@router.get("/{id}", response_model=training_plans_schemas.TrainingPlanResponse)
+def get_training_plan(
+    id: int,
+    session: session_dependency,
+    current_user: current_user_dependency
+):
+    training_plan = session.scalars(select(models.TrainingPlan).where(
+        models.TrainingPlan.id == id,
+        models.TrainingPlan.user_id == current_user.id
+    )).first()
+
+    if not training_plan:
+        raise not_authorized_token_exc("Not authorized")
+
+    training_units = []
+    for unit in training_plan.training_units:
+        training_exercises = []
+        for exercise in unit.training_exercises:
+            exercise_sets = []
+            for exercise_set in exercise.sets:
+                exercise_sets.append({
+                    "repetitions": exercise_set.repetitions
+                })
+            training_exercises.append({
+                "exercise_name": exercise.exercise.name,
+                "sets": exercise_sets
+            })
+        training_units.append({
+            "training_unit_name": unit.name,
+            "training_unit_description": unit.description,
+            "training_exercises": training_exercises
+        })
+
+    response = {
+        "training_plan_name": training_plan.name,
+        "training_plan_description": training_plan.description,
+        "source": training_plan.source,
+        "training_units": training_units
+    }
+
+    return response
