@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from sqlalchemy import select, and_, or_
+from sqlalchemy.orm import selectinload
 from models import models
 from schemas import training_plans_schemas
 from utils.dependencies import session_dependency, current_user_dependency
@@ -75,9 +76,19 @@ def get_training_plan(
     session: session_dependency,
     current_user: current_user_dependency
 ):
-    training_plan = session.scalars(select(models.TrainingPlan).where(
-        models.TrainingPlan.id == id,
-        models.TrainingPlan.user_id == current_user.id
+    training_plan = session.scalars(select(models.TrainingPlan)
+        .options(
+            selectinload(models.TrainingPlan.training_units)
+            .selectinload(models.TrainingUnit.training_exercises)
+            .selectinload(models.TrainingExercise.exercise),
+
+            selectinload(models.TrainingPlan.training_units)
+            .selectinload(models.TrainingUnit.training_exercises)
+            .selectinload(models.TrainingExercise.sets)
+        )
+        .where(
+            models.TrainingPlan.id == id,
+            models.TrainingPlan.user_id == current_user.id
     )).first()
 
     if not training_plan:

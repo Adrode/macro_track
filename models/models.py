@@ -140,7 +140,11 @@ class TrainingPlan(Base):
   source: Mapped[str]
 
   user: Mapped["User"] = relationship(back_populates="training_plans")
-  training_units: Mapped[list["TrainingUnit"]] = relationship(back_populates="training_plan", passive_deletes=True)
+  training_units: Mapped[list["TrainingUnit"]] = relationship(
+    back_populates="training_plan",
+    passive_deletes=True,
+    order_by="TrainingUnit.unit_order"
+  )
 
 class TrainingUnit(Base):
   __tablename__ = "training_units"
@@ -152,7 +156,11 @@ class TrainingUnit(Base):
   unit_order: Mapped[int]
 
   training_plan: Mapped["TrainingPlan"] = relationship(back_populates="training_units")
-  training_exercises: Mapped[list["TrainingExercise"]] = relationship(back_populates="training_unit", passive_deletes=True)
+  training_exercises: Mapped[list["TrainingExercise"]] = relationship(
+    back_populates="training_unit",
+    passive_deletes=True,
+    order_by="TrainingExercise.exercise_order"
+  )
 
 class TrainingExercise(Base):
   __tablename__ = "training_exercises"
@@ -164,7 +172,11 @@ class TrainingExercise(Base):
 
   training_unit: Mapped["TrainingUnit"] = relationship(back_populates="training_exercises")
   exercise: Mapped["Exercise"] = relationship(back_populates="training_exercise")
-  sets: Mapped[list["TrainingExerciseSet"]] = relationship(back_populates="training_exercise", passive_deletes=True)
+  sets: Mapped[list["TrainingExerciseSet"]] = relationship(
+    back_populates="training_exercise",
+    passive_deletes=True,
+    order_by="TrainingExerciseSet.set_order"
+  )
 
 class TrainingExerciseSet(Base):
   __tablename__ = "training_exercises_sets"
