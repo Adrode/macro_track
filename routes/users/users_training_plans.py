@@ -21,49 +21,52 @@ def create_training_plan(
         source = "user"
     )
     session.add(new_training_plan)
-    session.flush()
+
+    exercises_ids = {
+        exercise.exercise_id for unit in data.training_units
+        for exercise in unit.training_exercises
+    }
+
+    exercises = session.scalars(select(models.Exercise).where(
+        models.Exercise.id.in_(exercises_ids),
+        or_(
+            models.Exercise.user_id == current_user.id,
+            and_(
+                models.Exercise.user_id == None,
+                models.Exercise.trainer_id == None
+            )
+        )
+    )).all()
+
+    found_exercise_ids = {exercise.id for exercise in exercises}
+
+    if not exercises_ids.issubset(found_exercise_ids):
+        raise not_authorized_token_exc("Not authorized")
 
     for index1, item1 in enumerate(data.training_units):
         new_training_unit = models.TrainingUnit(
-            training_plan_id = new_training_plan.id,
+            training_plan = new_training_plan,
             name = item1.training_unit_name,
             description = item1.training_unit_description,
             unit_order = index1
         )
         session.add(new_training_unit)
-        session.flush()
 
         for index2, item2 in enumerate(item1.training_exercises):
-            exercise = session.scalars(select(models.Exercise).where(
-                models.Exercise.id == item2.exercise_id,
-                or_(
-                    models.Exercise.user_id == current_user.id,
-                    and_(
-                        models.Exercise.user_id == None,
-                        models.Exercise.trainer_id == None
-                    )
-                )
-            )).first()
-
-            if not exercise:
-                raise not_authorized_token_exc("Not authorized")
-
             new_training_exercise = models.TrainingExercise(
-                training_unit_id = new_training_unit.id,
+                training_unit = new_training_unit,
                 exercise_id = item2.exercise_id,
                 exercise_order = index2
             )
             session.add(new_training_exercise)
-            session.flush()
 
             for index3, item3 in enumerate(item2.training_exercise_sets):
                 new_training_exercise_set = models.TrainingExerciseSet(
-                    training_exercise_id = new_training_exercise.id,
+                    training_exercise = new_training_exercise,
                     set_order = index3,
                     repetitions = item3.repetitions
                 )
                 session.add(new_training_exercise_set)
-                session.flush()
 
     session.commit()
     session.refresh(new_training_plan)
