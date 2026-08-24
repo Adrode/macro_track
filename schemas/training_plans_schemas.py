@@ -28,7 +28,7 @@ class TrainingExercise(BaseModel):
 class TrainingUnitResponse(BaseModel):
     training_unit_name: str
     training_unit_description: str | None
-    training_exercises: list[TrainingExercise]
+    training_exercises: list[TrainingExercise] = []
 
 class TrainingPlanResponse(BaseModel):
     training_plan_name: str

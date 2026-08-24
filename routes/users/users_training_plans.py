@@ -124,3 +124,33 @@ def get_training_plan(
     }
 
     return response
+
+@router.get("/", response_model=list[training_plans_schemas.TrainingPlanResponse])
+def get_training_plans(
+    session: session_dependency,
+    current_user: current_user_dependency
+):
+    training_plans = session.scalars(select(models.TrainingPlan)
+        .options(
+            selectinload(models.TrainingPlan.training_units)
+        )
+        .where(
+            models.TrainingPlan.user_id == current_user.id
+    )).all()
+
+    if not training_plans:
+        raise not_authorized_token_exc("Not authorized")
+
+    response = []
+    for training_plan in training_plans:
+        response.append({
+            "training_plan_name": training_plan.name,
+            "training_plan_description": training_plan.description,
+            "source": training_plan.source,
+            "training_units": [{
+                "training_unit_name": training_unit.name,
+                "training_unit_description": training_unit.description
+            } for training_unit in training_plan.training_units]
+        })
+
+    return response
