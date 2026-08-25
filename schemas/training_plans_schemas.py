@@ -31,6 +31,7 @@ class TrainingUnitResponse(BaseModel):
     training_exercises: list[TrainingExercise] = []
 
 class TrainingPlanResponse(BaseModel):
+    training_plan_id: int
     training_plan_name: str
     training_plan_description: str | None
     source: Literal["user", "trainer"]

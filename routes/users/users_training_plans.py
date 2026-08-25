@@ -117,6 +117,7 @@ def get_training_plan(
         })
 
     response = {
+        "training_plan_id": training_plan.id,
         "training_plan_name": training_plan.name,
         "training_plan_description": training_plan.description,
         "source": training_plan.source,
@@ -144,6 +145,7 @@ def get_training_plans(
     response = []
     for training_plan in training_plans:
         response.append({
+            "training_plan_id": training_plan.id,
             "training_plan_name": training_plan.name,
             "training_plan_description": training_plan.description,
             "source": training_plan.source,
@@ -154,3 +156,22 @@ def get_training_plans(
         })
 
     return response
+
+@router.delete("/{id}")
+def delete_training_plan(
+    id: int,
+    session: session_dependency,
+    current_user: current_user_dependency
+):
+    training_plan = session.scalars(select(models.TrainingPlan).where(
+        models.TrainingPlan.id == id,
+        models.TrainingPlan.user_id == current_user.id
+    )).first()
+
+    if not training_plan:
+        raise not_authorized_token_exc("Not authorized")
+
+    session.delete(training_plan)
+    session.commit()
+
+    return {"detail": f"Training plan ID {training_plan.id} removed."}
