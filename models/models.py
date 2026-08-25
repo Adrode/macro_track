@@ -171,7 +171,7 @@ class TrainingExercise(Base):
   exercise_order: Mapped[int]
 
   training_unit: Mapped["TrainingUnit"] = relationship(back_populates="training_exercises")
-  exercise: Mapped["Exercise"] = relationship(back_populates="training_exercise")
+  exercise: Mapped["Exercise"] = relationship(back_populates="training_exercises")
   sets: Mapped[list["TrainingExerciseSet"]] = relationship(
     back_populates="training_exercise",
     passive_deletes=True,
@@ -205,7 +205,7 @@ class Exercise(Base):
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
   trainer_id: Mapped[int] = mapped_column(ForeignKey("trainers.id", ondelete="CASCADE"), nullable=True)
 
-  training_exercise: Mapped["TrainingExercise"] = relationship(back_populates="exercise")
+  training_exercises: Mapped[list["TrainingExercise"]] = relationship(back_populates="exercise")
 
 class WorkoutLog(Base):
   __tablename__ = "workout_logs"

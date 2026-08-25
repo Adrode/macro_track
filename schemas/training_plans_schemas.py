@@ -35,4 +35,9 @@ class TrainingPlanResponse(BaseModel):
     training_plan_name: str
     training_plan_description: str | None
     source: Literal["user", "trainer"]
-    training_units: list[TrainingUnitResponse]
+    training_units: list[TrainingUnitResponse] = []
+
+class UpdateTrainingPlan(BaseModel):
+    training_plan_name: str
+    training_plan_description: str
+    training_units: list[CreateTrainingUnits]
