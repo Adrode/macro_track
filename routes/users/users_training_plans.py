@@ -60,7 +60,7 @@ def create_training_plan(
             )
             session.add(new_training_exercise)
 
-            for index3, item3 in enumerate(item2.training_exercise_sets):
+            for index3, item3 in enumerate(item2.sets):
                 new_training_exercise_set = models.TrainingExerciseSet(
                     training_exercise = new_training_exercise,
                     set_order = index3,
@@ -115,6 +115,7 @@ def get_training_plan(
                     "repetitions": exercise_set.repetitions
                 })
             training_exercises.append({
+                "exercise_id": exercise.exercise_id,
                 "exercise_name": exercise.exercise.name,
                 "sets": exercise_sets
             })
@@ -187,7 +188,7 @@ def delete_training_plan(
 @router.put("/{id}", response_model=training_plans_schemas.TrainingPlanResponse)
 def update_training_plan(
     id: int,
-    data: training_plans_schemas.UpdateTrainingPlan,
+    data: training_plans_schemas.CreateTrainingPlan,
     session: session_dependency,
     current_user: current_user_dependency
 ):
@@ -244,7 +245,7 @@ def update_training_plan(
             )
             session.add(new_training_exercise)
 
-            for index3, item3 in enumerate(item2.training_exercise_sets):
+            for index3, item3 in enumerate(item2.sets):
                 new_training_exercise_set = models.TrainingExerciseSet(
                     training_exercise = new_training_exercise,
                     set_order = index3,

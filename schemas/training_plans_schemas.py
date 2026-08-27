@@ -6,7 +6,7 @@ class CreateTrainingExerciseSets(BaseModel):
 
 class CreateTrainingExercises(BaseModel):
     exercise_id: int
-    training_exercise_sets: list[CreateTrainingExerciseSets]
+    sets: list[CreateTrainingExerciseSets]
 
 class CreateTrainingUnits(BaseModel):
     training_unit_name: str
@@ -22,6 +22,7 @@ class ExerciseSets(BaseModel):
     repetitions: int
 
 class TrainingExercise(BaseModel):
+    exercise_id: int
     exercise_name: str
     sets: list[ExerciseSets]
 
@@ -36,8 +37,3 @@ class TrainingPlanResponse(BaseModel):
     training_plan_description: str | None
     source: Literal["user", "trainer"]
     training_units: list[TrainingUnitResponse] = []
-
-class UpdateTrainingPlan(BaseModel):
-    training_plan_name: str
-    training_plan_description: str
-    training_units: list[CreateTrainingUnits]
