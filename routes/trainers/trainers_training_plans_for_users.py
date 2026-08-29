@@ -50,7 +50,7 @@ def create_training_plan_for_user(
         models.Exercise.id.in_(exercise_ids)
     )).all()
 
-    exercises_for_training_plan = []
+    exercise_ids_map = {}
 
     for exercise in exercises:
         if exercise.trainer_id == current_trainer.id and exercise.user_id is None:
@@ -64,9 +64,9 @@ def create_training_plan_for_user(
             )
             session.add(new_exercise_for_user)
             session.flush()
-            exercises_for_training_plan.append(new_exercise_for_user)
+            exercise_ids_map[exercise.id] = new_exercise_for_user.id
         elif exercise.trainer_id is None and exercise.user_id is None:
-            exercises_for_training_plan.append(exercise)
+            exercise_ids_map[exercise.id] = exercise.id
         else:
             raise not_authorized_token_exc("Not authorized")
 
@@ -82,7 +82,7 @@ def create_training_plan_for_user(
         for index2, item2 in enumerate(item1.training_exercises):
             new_training_exercise = models.TrainingExercise(
                 training_unit = new_training_unit,
-                exercise_id = item2.exercise_id,
+                exercise_id = exercise_ids_map[item2.exercise_id],
                 exercise_order = index2
             )
             session.add(new_training_exercise)
