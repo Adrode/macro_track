@@ -148,7 +148,7 @@ def get_training_plans(
             models.TrainingPlan.user_id == current_user.id
     )).all()
 
-    if not training_plans:
+    if not training_plans and training_plans != []:
         raise not_authorized_token_exc("Not authorized")
 
     response = []
