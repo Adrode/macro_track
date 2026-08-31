@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from models import models
 from schemas import training_plans_schemas
 from utils.dependencies import session_dependency, current_trainer_dependency
@@ -104,6 +105,112 @@ def create_training_plan_for_user(
         "training_plan_description": new_training_plan_for_user.description,
         "source": new_training_plan_for_user.source,
         "training_units": []
+    }
+
+    return response
+
+@router.get("/{user_id}", response_model=list[training_plans_schemas.TrainingPlanResponse])
+def create_training_plan_for_user(
+    user_id: int,
+    session: session_dependency,
+    current_trainer: current_trainer_dependency
+):
+    user = session.scalars(select(models.User).where(
+        models.User.id == user_id
+    )).first()
+
+    if not user:
+            raise not_authorized_token_exc("Not authorized")
+    
+    connection = session.scalars(select(models.TrainerUserConnection).where(
+        models.TrainerUserConnection.status == "accepted",
+        models.TrainerUserConnection.user_id == user.id,
+        models.TrainerUserConnection.trainer_id == current_trainer.id
+    )).first()
+
+    if not connection or connection.status != "accepted":
+        raise not_authorized_token_exc("No connection")
+
+    training_plans = session.scalars(select(models.TrainingPlan).where(
+        models.TrainingPlan.user_id == user.id
+    )).all()
+
+    response = []
+    for item in training_plans:
+        response.append({
+            "training_plan_id": item.id,
+            "training_plan_name": item.name,
+            "training_plan_description": item.description,
+            "source": item.source,
+            "training_units": []
+        })
+
+    return response
+
+@router.get("/{user_id}/{training_plan_id}", response_model=training_plans_schemas.TrainingPlanResponse)
+def create_training_plan_for_user(
+    user_id: int,
+    training_plan_id: int,
+    session: session_dependency,
+    current_trainer: current_trainer_dependency
+):
+    user = session.scalars(select(models.User).where(
+        models.User.id == user_id
+    )).first()
+
+    if not user:
+        raise not_authorized_token_exc("Not authorized")
+    
+    connection = session.scalars(select(models.TrainerUserConnection).where(
+        models.TrainerUserConnection.status == "accepted",
+        models.TrainerUserConnection.user_id == user.id,
+        models.TrainerUserConnection.trainer_id == current_trainer.id
+    )).first()
+
+    if not connection or connection.status != "accepted":
+        raise not_authorized_token_exc("No connection")
+
+    training_plan = session.scalars(select(models.TrainingPlan)
+        .options(
+            selectinload(models.TrainingPlan.training_units)
+            .selectinload(models.TrainingUnit.training_exercises)
+            .selectinload(models.TrainingExercise.exercise),
+
+            selectinload(models.TrainingPlan.training_units)
+            .selectinload(models.TrainingUnit.training_exercises)
+            .selectinload(models.TrainingExercise.sets)
+        )
+        .where(
+            models.TrainingPlan.id == training_plan_id,
+            models.TrainingPlan.user_id == user.id
+    )).first()
+
+    training_units = []
+    for unit in training_plan.training_units:
+        training_exercises = []
+        for exercise in unit.training_exercises:
+            exercise_sets = []
+            for exercise_set in exercise.sets:
+                exercise_sets.append({
+                    "repetitions": exercise_set.repetitions
+                })
+            training_exercises.append({
+                "exercise_id": exercise.exercise_id,
+                "exercise_name": exercise.exercise.name,
+                "sets": exercise_sets
+            })
+        training_units.append({
+            "training_unit_name": unit.name,
+            "training_unit_description": unit.description, 
+            "training_exercises": training_exercises
+        })
+
+    response = {
+        "training_plan_id": training_plan.id,
+        "training_plan_name": training_plan.name,
+        "training_plan_description": training_plan.description,
+        "source": training_plan.source,
+        "training_units": training_units
     }
 
     return response
