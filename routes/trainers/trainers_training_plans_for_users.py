@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from sqlalchemy import select
+from sqlalchemy import select, and_, or_
 from sqlalchemy.orm import selectinload
 from models import models
 from schemas import training_plans_schemas
@@ -50,6 +50,11 @@ def create_training_plan_for_user(
     exercises = session.scalars(select(models.Exercise).where(
         models.Exercise.id.in_(exercise_ids)
     )).all()
+
+    found_exercise_ids = {exercise.id for exercise in exercises}
+
+    if not set(exercise_ids).issubset(found_exercise_ids):
+        raise not_authorized_token_exc("Not authorized")
 
     exercise_ids_map = {}
 
@@ -110,7 +115,7 @@ def create_training_plan_for_user(
     return response
 
 @router.get("/{user_id}", response_model=list[training_plans_schemas.TrainingPlanResponse])
-def create_training_plan_for_user(
+def get_user_training_plans(
     user_id: int,
     session: session_dependency,
     current_trainer: current_trainer_dependency
@@ -148,7 +153,7 @@ def create_training_plan_for_user(
     return response
 
 @router.get("/{user_id}/{training_plan_id}", response_model=training_plans_schemas.TrainingPlanResponse)
-def create_training_plan_for_user(
+def get_user_training_plan(
     user_id: int,
     training_plan_id: int,
     session: session_dependency,
@@ -159,6 +164,14 @@ def create_training_plan_for_user(
     )).first()
 
     if not user:
+        raise not_authorized_token_exc("Not authorized")
+
+    training_plan = session.scalars(select(models.TrainingPlan).where(
+        models.TrainingPlan.id == training_plan_id,
+        models.TrainingPlan.user_id == user_id
+    )).first()
+
+    if not training_plan:
         raise not_authorized_token_exc("Not authorized")
     
     connection = session.scalars(select(models.TrainerUserConnection).where(
