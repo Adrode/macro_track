@@ -238,5 +238,3 @@ class WorkoutLogExerciseSet(Base):
   weight: Mapped[int] = mapped_column(nullable=True)
 
   exercise: Mapped["WorkoutLogExercise"] = relationship(back_populates="sets")
-  
-# TEMPLATES mealsów dla trenera? jako snapshot samych nazw produktów z których składać ma się meals?
