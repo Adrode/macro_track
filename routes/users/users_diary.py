@@ -18,7 +18,7 @@ def post_diary(
   try:
     meal = session.scalars(select(models.Meal).where(models.Meal.id == data.meal_id)).first()
 
-    if not meal:
+    if not meal or meal.user_id != current_user.id:
       raise not_authorized_token_exc("Not authorized")
 
     new_diary = models.DiaryEntry(
