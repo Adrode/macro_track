@@ -98,13 +98,7 @@ def patch_exercise(
 ):
     exercise = session.scalars(select(models.Exercise).where(
         models.Exercise.id == id,
-        or_(
-            models.Exercise.trainer_id == current_trainer.id,
-            and_(
-                models.Exercise.user_id == None,
-                models.Exercise.trainer_id == None
-            )
-        )
+        models.Exercise.trainer_id == current_trainer.id
     )).first()
 
     if not exercise:
