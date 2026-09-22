@@ -24,6 +24,7 @@ class User(Base):
   ai_messages: Mapped[list["AIDetails"]] = relationship(back_populates="user", passive_deletes=True)
   trainer_connection: Mapped[list["TrainerUserConnection"]] = relationship(back_populates="user")
   training_plans: Mapped[list["TrainingPlan"]] = relationship(back_populates="user", passive_deletes=True)
+  workout_logs: Mapped[list["WorkoutLog"]] = relationship(back_populates="user", passive_deletes=True)
 
 class Trainer(Base):
   __tablename__ = "trainers"
@@ -212,10 +213,12 @@ class WorkoutLog(Base):
 
   id: Mapped[int] = mapped_column(primary_key=True)
   name: Mapped[str]
-  date: Mapped[datetime]
-  duration: Mapped[int] = mapped_column(nullable=True)
+  start_time: Mapped[datetime]
+  end_time: Mapped[datetime] = mapped_column(nullable=True)
+  user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
   exercises: Mapped[list["WorkoutLogExercise"]] = relationship(back_populates="workout_log", passive_deletes=True)
+  user: Mapped["User"] = relationship(back_populates="workout_logs", passive_deletes=True)
 
 class WorkoutLogExercise(Base):
   __tablename__ = "workout_log_exercises"
@@ -234,7 +237,8 @@ class WorkoutLogExerciseSet(Base):
   id: Mapped[int] = mapped_column(primary_key=True)
   workout_log_exercise_id: Mapped[int] = mapped_column(ForeignKey("workout_log_exercises.id", ondelete="CASCADE"))
   set_order: Mapped[int]
-  repetitions: Mapped[int]
+  planned_repetitions: Mapped[int]
+  performed_repetitions: Mapped[int]
   weight: Mapped[int] = mapped_column(nullable=True)
 
   exercise: Mapped["WorkoutLogExercise"] = relationship(back_populates="sets")
