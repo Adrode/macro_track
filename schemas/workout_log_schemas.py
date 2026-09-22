@@ -20,4 +20,14 @@ class WorkoutLogResponse(BaseModel):
     id: int
     name: str
     start_time: datetime
+    end_time: datetime | None
     exercises: list[WorkoutLogExercisesResponse]
+
+class WorkoutLogsResponse(BaseModel):
+    id: int
+    name: str
+    start_time: datetime
+    end_time: datetime | None
+
+class FinishWorkout(BaseModel):
+    end_time: datetime
