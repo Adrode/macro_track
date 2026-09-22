@@ -80,6 +80,7 @@ def create_workout(
         "id": new_workout_log.id,
         "name": new_workout_log.name,
         "start_time": new_workout_log.start_time,
+        "end_time": new_workout_log.end_time,
         "exercises": response_exercises
     }
 
@@ -155,7 +156,7 @@ def get_workout_logs(
 
     return response
 
-@router.patch("/{id}")
+@router.patch("/finish/{id}")
 def finish_workout(
     id: int,
     session: session_dependency,
@@ -174,3 +175,73 @@ def finish_workout(
     session.refresh(workout_log)
 
     return {"detail": f"Workout ID {workout_log.id} finished at {workout_log.end_time}"}
+
+@router.patch("/{workout_log_id}/exercise/{exercise_id}/set/{set_id}", response_model=workout_log_schemas.WorkoutLogResponse)
+def add_repetitions(
+    workout_log_id: int,
+    exercise_id: int,
+    set_id: int,
+    data: workout_log_schemas.PatchRepetitions,
+    session: session_dependency,
+    current_user: current_user_dependency
+):
+    workout_set = session.scalars(select(models.WorkoutLogExerciseSet)
+        .join(models.WorkoutLogExercise)
+        .join(models.WorkoutLog)
+        .where(
+            models.WorkoutLog.id == workout_log_id,
+            models.WorkoutLogExercise.id == exercise_id,
+            models.WorkoutLogExercise.workout_log_id == workout_log_id,
+            models.WorkoutLogExerciseSet.id == set_id,
+            models.WorkoutLog.user_id == current_user.id
+        )
+    ).first()
+
+    if not workout_set:
+        raise not_authorized_token_exc("Not authorized")
+    
+    workout_log = session.scalars(select(models.WorkoutLog)
+        .options(
+            selectinload(models.WorkoutLog.exercises)
+            .selectinload(models.WorkoutLogExercise.sets)
+        )
+        .where(
+            models.WorkoutLog.id == workout_log_id,
+            models.WorkoutLog.user_id == current_user.id
+    )).first()
+
+    if not workout_log:
+        raise not_authorized_token_exc("Not authorized")
+
+    if workout_log.end_time is not None:
+        raise not_authorized_token_exc("Workout is already finished")
+
+    workout_set.performed_repetitions = data.performed_repetitions
+
+    session.commit()
+    session.refresh(workout_log)
+
+    response_exercises = []
+    for exercise in workout_log.exercises:
+        response_sets = []
+        for exercise_set in exercise.sets:
+            response_sets.append({
+                "set_id": exercise_set.id,
+                "planned_repetitions": exercise_set.planned_repetitions,
+                "performed_repetitions": exercise_set.performed_repetitions
+            })
+        response_exercises.append({
+            "exercise_id": exercise.id,
+            "exercise_name": exercise.exercise_name,
+            "sets": response_sets
+        })
+
+    response = {
+        "id": workout_log.id,
+        "name": workout_log.name,
+        "start_time": workout_log.start_time,
+        "end_time": workout_log.end_time,
+        "exercises": response_exercises
+    }
+
+    return response

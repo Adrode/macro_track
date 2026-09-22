@@ -31,3 +31,6 @@ class WorkoutLogsResponse(BaseModel):
 
 class FinishWorkout(BaseModel):
     end_time: datetime
+
+class PatchRepetitions(BaseModel):
+    performed_repetitions: int
