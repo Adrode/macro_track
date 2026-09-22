@@ -120,6 +120,7 @@ def get_training_plan(
                 "sets": exercise_sets
             })
         training_units.append({
+            "training_unit_id": unit.id,
             "training_unit_name": unit.name,
             "training_unit_description": unit.description,
             "training_exercises": training_exercises
@@ -159,6 +160,7 @@ def get_training_plans(
             "training_plan_description": training_plan.description,
             "source": training_plan.source,
             "training_units": [{
+                "training_unit_id": training_unit.id,
                 "training_unit_name": training_unit.name,
                 "training_unit_description": training_unit.description
             } for training_unit in training_plan.training_units]

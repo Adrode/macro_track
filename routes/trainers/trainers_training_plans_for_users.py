@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from sqlalchemy import select, and_, or_
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from models import models
 from schemas import training_plans_schemas
@@ -213,6 +213,7 @@ def get_user_training_plan(
                 "sets": exercise_sets
             })
         training_units.append({
+            "training_unit_id": unit.id,
             "training_unit_name": unit.name,
             "training_unit_description": unit.description, 
             "training_exercises": training_exercises

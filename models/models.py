@@ -217,7 +217,10 @@ class WorkoutLog(Base):
   end_time: Mapped[datetime] = mapped_column(nullable=True)
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
 
-  exercises: Mapped[list["WorkoutLogExercise"]] = relationship(back_populates="workout_log", passive_deletes=True)
+  exercises: Mapped[list["WorkoutLogExercise"]] = relationship(
+    back_populates="workout_log",
+    passive_deletes=True,
+    order_by="WorkoutLogExercise.exercise_order")
   user: Mapped["User"] = relationship(back_populates="workout_logs", passive_deletes=True)
 
 class WorkoutLogExercise(Base):
@@ -229,7 +232,10 @@ class WorkoutLogExercise(Base):
   exercise_order: Mapped[int]
 
   workout_log: Mapped["WorkoutLog"] = relationship(back_populates="exercises")
-  sets: Mapped[list["WorkoutLogExerciseSet"]] = relationship(back_populates="exercise", passive_deletes=True)
+  sets: Mapped[list["WorkoutLogExerciseSet"]] = relationship(
+    back_populates="exercise",
+    passive_deletes=True,
+    order_by="WorkoutLogExerciseSet.set_order")
 
 class WorkoutLogExerciseSet(Base):
   __tablename__ = "workout_log_exercise_sets"

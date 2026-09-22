@@ -27,6 +27,7 @@ class TrainingExercise(BaseModel):
     sets: list[ExerciseSets]
 
 class TrainingUnitResponse(BaseModel):
+    training_unit_id: int
     training_unit_name: str
     training_unit_description: str | None
     training_exercises: list[TrainingExercise] = []
