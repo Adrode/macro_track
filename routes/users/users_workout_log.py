@@ -9,6 +9,43 @@ from datetime import datetime, timezone
 
 router = APIRouter()
 
+def workout_log_response(workout_log):
+    response_exercises = []
+    for exercise in workout_log.exercises:
+        response_sets = []
+        for exercise_set in exercise.sets:
+            response_sets.append({
+                "workout_log_set_id": exercise_set.id,
+                "planned_repetitions": exercise_set.planned_repetitions,
+                "performed_repetitions": exercise_set.performed_repetitions
+            })
+        response_exercises.append({
+            "workout_log_exercise_id": exercise.id,
+            "workout_log_exercise_name": exercise.exercise_name,
+            "sets": response_sets
+        })
+
+    if workout_log.end_time is not None:
+        response = {
+            "id": workout_log.id,
+            "name": workout_log.name,
+            "start_time": workout_log.start_time,
+            "end_time": workout_log.end_time,
+            "duration": workout_log.end_time - workout_log.start_time,
+            "exercises": response_exercises
+        }
+    else:
+        response = {
+            "id": workout_log.id,
+            "name": workout_log.name,
+            "start_time": workout_log.start_time,
+            "end_time": workout_log.end_time,
+            "duration": None,
+            "exercises": response_exercises
+        }
+
+    return response
+
 @router.post("/", response_model=workout_log_schemas.WorkoutLogResponse)
 def create_workout(
     data: workout_log_schemas.CreateWorkoutLog,
@@ -35,7 +72,7 @@ def create_workout(
 
     new_workout_log = models.WorkoutLog(
         name = training_unit.name,
-        start_time = data.date,
+        start_time = datetime.now(timezone.utc),
         user_id = current_user.id
     )
     session.add(new_workout_log)
@@ -61,30 +98,7 @@ def create_workout(
     session.commit()
     session.refresh(new_workout_log)
 
-    response_exercises = []
-    for exercise in new_workout_log.exercises:
-        response_sets = []
-        for exercise_set in exercise.sets:
-            response_sets.append({
-                "set_id": exercise_set.id,
-                "planned_repetitions": exercise_set.planned_repetitions,
-                "performed_repetitions": exercise_set.performed_repetitions
-            })
-        response_exercises.append({
-            "exercise_id": exercise.id,
-            "exercise_name": exercise.exercise_name,
-            "sets": response_sets
-        })
-
-    response = {
-        "id": new_workout_log.id,
-        "name": new_workout_log.name,
-        "start_time": new_workout_log.start_time,
-        "end_time": new_workout_log.end_time,
-        "exercises": response_exercises
-    }
-
-    return response
+    return workout_log_response(workout_log=new_workout_log)
 
 @router.get("/{id}", response_model=workout_log_schemas.WorkoutLogResponse)
 def get_workout_log(
@@ -105,30 +119,7 @@ def get_workout_log(
     if not workout_log:
         raise not_authorized_token_exc("Not authorized")
 
-    response_exercises = []
-    for exercise in workout_log.exercises:
-        response_sets = []
-        for exercise_set in exercise.sets:
-            response_sets.append({
-                "set_id": exercise_set.id,
-                "planned_repetitions": exercise_set.planned_repetitions,
-                "performed_repetitions": exercise_set.performed_repetitions
-            })
-        response_exercises.append({
-            "exercise_id": exercise.id,
-            "exercise_name": exercise.exercise_name,
-            "sets": response_sets
-        })
-
-    response = {
-        "id": workout_log.id,
-        "name": workout_log.name,
-        "start_time": workout_log.start_time,
-        "end_time": workout_log.end_time,
-        "exercises": response_exercises
-    }
-
-    return response
+    return workout_log_response(workout_log=workout_log)
 
 @router.get("/", response_model=list[workout_log_schemas.WorkoutLogsResponse])
 def get_workout_logs(
@@ -169,6 +160,9 @@ def finish_workout(
 
     if not workout_log:
         raise not_authorized_token_exc("Not authorized")
+
+    if workout_log.end_time is not None:
+        raise not_authorized_token_exc("Workout is already finished")
 
     workout_log.end_time = datetime.now(timezone.utc)
     session.commit()
@@ -221,27 +215,4 @@ def add_repetitions(
     session.commit()
     session.refresh(workout_log)
 
-    response_exercises = []
-    for exercise in workout_log.exercises:
-        response_sets = []
-        for exercise_set in exercise.sets:
-            response_sets.append({
-                "set_id": exercise_set.id,
-                "planned_repetitions": exercise_set.planned_repetitions,
-                "performed_repetitions": exercise_set.performed_repetitions
-            })
-        response_exercises.append({
-            "exercise_id": exercise.id,
-            "exercise_name": exercise.exercise_name,
-            "sets": response_sets
-        })
-
-    response = {
-        "id": workout_log.id,
-        "name": workout_log.name,
-        "start_time": workout_log.start_time,
-        "end_time": workout_log.end_time,
-        "exercises": response_exercises
-    }
-
-    return response
+    return workout_log_response(workout_log=workout_log)
