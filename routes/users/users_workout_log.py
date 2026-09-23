@@ -53,6 +53,7 @@ def create_workout(
     current_user: current_user_dependency
 ):
     training_unit = session.scalars(select(models.TrainingUnit)
+    .join(models.TrainingUnit.training_plan)
     .options(
         selectinload(models.TrainingUnit.training_exercises)
         .selectinload(models.TrainingExercise.exercise),
