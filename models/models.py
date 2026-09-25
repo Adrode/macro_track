@@ -1,7 +1,6 @@
 from datetime import datetime
-from sqlalchemy import ForeignKey, CheckConstraint, String
+from sqlalchemy import ForeignKey, CheckConstraint, String, JSON
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from sqlalchemy.dialects.postgresql import ARRAY
 
 class Base(DeclarativeBase):
   pass
@@ -200,8 +199,8 @@ class Exercise(Base):
 
   id: Mapped[int] = mapped_column(primary_key=True)
   name: Mapped[str]
-  main_muscles: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
-  side_muscles: Mapped[list[str]] = mapped_column(ARRAY(String), default=list)
+  main_muscles: Mapped[list[str]] = mapped_column(JSON, default=list)
+  side_muscles: Mapped[list[str]] = mapped_column(JSON, default=list)
   description: Mapped[str] = mapped_column(nullable=True)
   user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True)
   trainer_id: Mapped[int] = mapped_column(ForeignKey("trainers.id", ondelete="CASCADE"), nullable=True)
