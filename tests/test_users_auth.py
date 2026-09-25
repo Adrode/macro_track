@@ -1,6 +1,6 @@
 def test_register_valid_data(client):
   response = client.post(
-    "/auth/register",
+    "/auth/user/register",
     json={
       "email": f"adison@gmail.com",
       "username": "Adison",
@@ -18,7 +18,7 @@ def test_register_valid_data(client):
 
 def test_register_invalid_email(client):
   response = client.post(
-    "/auth/register",
+    "/auth/user/register",
     json={
       "email": f"gmail.com",
       "username": "g",
@@ -34,7 +34,7 @@ def test_register_invalid_email(client):
 
 def test_register_duplicated_email(client):
   response1 = client.post(
-    "/auth/register",
+    "/auth/user/register",
     json={
       "email": "adison@gmail.com",
       "username": "Nosida",
@@ -47,7 +47,7 @@ def test_register_duplicated_email(client):
   )
 
   response2 = client.post(
-    "/auth/register",
+    "/auth/user/register",
     json={
       "email": "adison@gmail.com",
       "username": "Nosida",
@@ -64,7 +64,7 @@ def test_register_duplicated_email(client):
 
 def test_login_valid_data(client, test_first_user):
   response = client.post(
-    "/auth/login",
+    "/auth/user/login",
     data={
       "username": test_first_user.email,
       "password": test_first_user.plain_password
@@ -76,7 +76,7 @@ def test_login_valid_data(client, test_first_user):
 
 def test_login_invalid_data(client):
   response = client.post(
-    "/auth/login",
+    "/auth/user/login",
     data={
       "username": "kekw",
       "password": "kekw"
@@ -87,7 +87,7 @@ def test_login_invalid_data(client):
 
 def test_login_invalid_password(client, test_first_user):
   response = client.post(
-    "/auth/login",
+    "/auth/user/login",
     data={
       "username": test_first_user.email,
       "password": "kekw"

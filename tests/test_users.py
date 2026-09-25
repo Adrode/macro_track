@@ -1,16 +1,17 @@
 import authentication.short_tokens as auth
 
 def test_get_me_unauthorized(client):
-  response = client.get("/users/")
+  response = client.get("/user/")
 
   assert response.status_code == 401
 
 def test_get_me_authorized(client, test_first_user):
   token = auth.create_access_token({
-      "sub": test_first_user.email
+      "sub": test_first_user.email,
+      "role": "user"
     })
   response = client.get(
-    "/users/",
+    "/user/",
     headers={"Authorization": f"Bearer {token}"}
   )
 
@@ -22,7 +23,7 @@ def test_get_me_authorized(client, test_first_user):
   
 def test_patch_me_unauthorized(client, test_first_user):
   response = client.patch(
-    "/users/",
+    "/user/",
     json={"username": test_first_user.username}
   )
 
@@ -30,10 +31,11 @@ def test_patch_me_unauthorized(client, test_first_user):
 
 def test_patch_me_authorized(client, test_first_user):
   token = auth.create_access_token({
-      "sub": test_first_user.email
+      "sub": test_first_user.email,
+      "role": "user"
     })
   response = client.patch(
-    "/users/",
+    "/user/",
     json={"username": "Adrian"},
     headers={"Authorization": f"Bearer {token}"}
   )
@@ -41,7 +43,7 @@ def test_patch_me_authorized(client, test_first_user):
   assert response.status_code == 200
   
   response2 = client.get(
-    "/users/",
+    "/user/",
     headers={"Authorization": f"Bearer {token}"}
   )
 
@@ -49,10 +51,11 @@ def test_patch_me_authorized(client, test_first_user):
 
 def test_patch_me_invalid_email(client, test_first_user):
   token = auth.create_access_token({
-      "sub": test_first_user.email
+      "sub": test_first_user.email,
+      "role": "user"
     })
   response = client.patch(
-    "/users/",
+    "/user/",
     json={"email": "kekw2"},
     headers={"Authorization": f"Bearer {token}"}
   )

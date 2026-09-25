@@ -1,6 +1,6 @@
 def test_post_product_valid_data(client, authenticate_first_user):
   response = client.post(
-    "/products/",
+    "/user/products/",
     json={
       "category": "protein",
       "name": "Parówkas",
@@ -22,7 +22,7 @@ def test_post_product_valid_data(client, authenticate_first_user):
                 
 def test_post_product_invalid_data(client, authenticate_first_user):
   response = client.post(
-    "/products/",
+    "/user/products/",
     json={
       "category": "breakfast",
       "name": 15,
@@ -38,7 +38,7 @@ def test_post_product_invalid_data(client, authenticate_first_user):
 
 def test_get_product_valid_data(client, test_first_product, authenticate_first_user):
   response = client.get(
-    f"/products/{test_first_product.id}",
+    f"/user/products/{test_first_product.id}",
     headers=authenticate_first_user
   )
 
@@ -46,14 +46,14 @@ def test_get_product_valid_data(client, test_first_product, authenticate_first_u
 
 def test_get_product_unauthorized_user(client, test_first_product):
   response = client.get(
-    f"/products/{test_first_product.id}"
+    f"/user/products/{test_first_product.id}"
   )
 
   assert response.status_code == 401
 
 def test_get_product_owned_by_other_user(client, test_second_product, authenticate_first_user):
   response = client.get(
-    f"/products/{test_second_product.id}",
+    f"/user/products/{test_second_product.id}",
     headers=authenticate_first_user
   )
 
@@ -61,7 +61,7 @@ def test_get_product_owned_by_other_user(client, test_second_product, authentica
 
 def test_get_product_does_not_exist(client, authenticate_first_user):
   response = client.get(
-    "/products/0",
+    "/user/products/0",
     headers=authenticate_first_user
   )
 
@@ -76,12 +76,12 @@ def test_get_products_valid_data(
     test_second_product
   ):
   response1 = client.get(
-    "/products/",
+    "/user/products/",
     headers=authenticate_first_user
   )
   
   response2 = client.get(
-    "/products/",
+    "/user/products/",
     headers=authenticate_second_user
   )
   
@@ -90,19 +90,19 @@ def test_get_products_valid_data(
 
 def test_get_products_unauthorized(client, test_first_product, test_public_product):
   response = client.get(
-    "/products/"
+    "/user/products/"
   )
 
   assert response.status_code == 401
 
 def test_get_products_no_products_in_db(client, authenticate_first_user, authenticate_second_user):
   response1 = client.get(
-    "/products/",
+    "/user/products/",
     headers=authenticate_first_user
   )
 
   response2 = client.get(
-    "/products/",
+    "/user/products/",
     headers=authenticate_second_user
   )
 
@@ -111,12 +111,12 @@ def test_get_products_no_products_in_db(client, authenticate_first_user, authent
 
 def test_get_products_only_public(client, authenticate_first_user, authenticate_second_user, test_public_product):
   response1 = client.get(
-    "/products/",
+    "/user/products/",
     headers=authenticate_first_user
   )
 
   response2 = client.get(
-    "/products/",
+    "/user/products/",
     headers=authenticate_second_user
   )
 
@@ -126,7 +126,7 @@ def test_get_products_only_public(client, authenticate_first_user, authenticate_
 
 def test_delete_product_valid_data(client, authenticate_first_user, test_first_product):
   response = client.delete(
-    f"/products/{test_first_product.id}",
+    f"/user/products/{test_first_product.id}",
     headers=authenticate_first_user
   )
 
@@ -134,14 +134,14 @@ def test_delete_product_valid_data(client, authenticate_first_user, test_first_p
 
 def test_delete_product_unauthorized(client, test_first_product):
   response = client.delete(
-    f"/products/{test_first_product.id}"
+    f"/user/products/{test_first_product.id}"
   )
 
   assert response.status_code == 401
 
 def test_delete_product_owned_by_other_user(client, test_second_product, authenticate_first_user):
   response = client.delete(
-    f"/products/{test_second_product.id}",
+    f"/user/products/{test_second_product.id}",
     headers=authenticate_first_user
   )
 
@@ -149,7 +149,7 @@ def test_delete_product_owned_by_other_user(client, test_second_product, authent
 
 def test_delete_product_public(client, authenticate_first_user, test_public_product):
   response = client.delete(
-    f"/products/{test_public_product.id}",
+    f"/user/products/{test_public_product.id}",
     headers=authenticate_first_user
   )
 
@@ -157,7 +157,7 @@ def test_delete_product_public(client, authenticate_first_user, test_public_prod
 
 def test_delete_product_does_not_exist(client, authenticate_first_user):
   response = client.delete(
-    f"/products/0",
+    f"/user/products/0",
     headers=authenticate_first_user
   )
 
