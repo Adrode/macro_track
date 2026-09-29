@@ -36,6 +36,22 @@ def test_post_product_invalid_data(client, authenticate_first_user):
 
   assert response.status_code == 422
 
+def test_post_product_macros_lower_than_zero(client, authenticate_first_user):
+  response = client.post(
+    "/user/products/",
+    json={
+      "category": "protein",
+      "name": "whey",
+      "kcal_per_100g": -200,
+      "protein_per_100g": -20,
+      "fat_per_100g": -10,
+      "carbs_per_100g": -50
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 422
+
 def test_get_product_valid_data(client, test_first_product, authenticate_first_user):
   response = client.get(
     f"/user/products/{test_first_product.id}",
@@ -57,7 +73,7 @@ def test_get_product_owned_by_other_user(client, test_second_product, authentica
     headers=authenticate_first_user
   )
 
-  assert response.status_code == 401
+  assert response.status_code == 404
 
 def test_get_product_does_not_exist(client, authenticate_first_user):
   response = client.get(
@@ -145,7 +161,7 @@ def test_delete_product_owned_by_other_user(client, test_second_product, authent
     headers=authenticate_first_user
   )
 
-  assert response.status_code == 401
+  assert response.status_code == 404
 
 def test_delete_product_public(client, authenticate_first_user, test_public_product):
   response = client.delete(
@@ -153,7 +169,7 @@ def test_delete_product_public(client, authenticate_first_user, test_public_prod
     headers=authenticate_first_user
   )
 
-  assert response.status_code == 401
+  assert response.status_code == 404
 
 def test_delete_product_does_not_exist(client, authenticate_first_user):
   response = client.delete(

@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from sqlalchemy import select, and_, or_
 from sqlalchemy.exc import IntegrityError
 from utils.dependencies import session_dependency, current_user_dependency
-from utils.exceptions import not_found_exc, bad_request_exc, not_authorized_token_exc
+from utils.exceptions import not_found_exc, bad_request_exc
 from models import models
 from schemas import product_schemas
 
@@ -30,7 +30,7 @@ def post_product(
     session.refresh(new_product)
     return new_product
   except IntegrityError:
-    raise bad_request_exc
+    raise bad_request_exc()
 
 @router.get("/{id}", response_model=product_schemas.ProductResponse)
 def get_product(
@@ -44,9 +44,7 @@ def get_product(
     )).first()
 
   if not product:
-    raise not_authorized_token_exc("Not authorized")
-  if product.trainer_id != None:
-    raise bad_request_exc
+    raise not_found_exc()
   
   return product
 
@@ -66,7 +64,7 @@ def get_products(
   )).all()
 
   if not products:
-    raise not_found_exc
+    raise not_found_exc()
   
   return products
 
@@ -76,13 +74,13 @@ def delete_product(
   session: session_dependency,
   current_user: current_user_dependency
 ):
-  product = session.scalars(select(models.Product).where(models.Product.id == id)).first()
+  product = session.scalars(select(models.Product).where(
+      models.Product.id == id,
+      models.Product.user_id == current_user.id
+    )).first()
 
   if not product:
-    raise not_found_exc
-  
-  if product.user_id == None or product.user_id != current_user.id:
-    raise not_authorized_token_exc("Not authorized")
+    raise not_found_exc()
 
   session.delete(product)
   session.commit()
@@ -101,7 +99,7 @@ def patch_product(
   )).first()
 
   if not product:
-    raise not_authorized_token_exc("Not authorized")
+    raise not_found_exc()
 
   patch_data = data.model_dump(exclude_unset=True)
 

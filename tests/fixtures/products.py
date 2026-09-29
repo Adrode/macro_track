@@ -10,7 +10,8 @@ def test_public_product(db_session):
     protein_per_100g=20,
     fat_per_100g=5,
     carbs_per_100g=45,
-    user_id=None
+    user_id=None,
+    trainer_id=None
   )
 
   db_session.add(product)
@@ -28,7 +29,8 @@ def test_first_product(db_session, test_first_user):
     protein_per_100g=20,
     fat_per_100g=5,
     carbs_per_100g=45,
-    user_id=test_first_user.id
+    user_id=test_first_user.id,
+    trainer_id=None
   )
 
   db_session.add(product)
@@ -46,7 +48,8 @@ def test_second_product(db_session, test_second_user):
     protein_per_100g=10,
     fat_per_100g=10,
     carbs_per_100g=60,
-    user_id=test_second_user.id
+    user_id=test_second_user.id,
+    trainer_id=None
   )
 
   db_session.add(product)

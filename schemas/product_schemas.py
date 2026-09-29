@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from enum import Enum
 
 class ProductCategory(str, Enum):
@@ -10,10 +10,10 @@ class ProductCategory(str, Enum):
 class CreateProduct(BaseModel):
   category: ProductCategory
   name: str
-  kcal_per_100g: int
-  protein_per_100g: int
-  fat_per_100g: int
-  carbs_per_100g: int
+  kcal_per_100g: int = Field(ge=0)
+  protein_per_100g: int = Field(ge=0)
+  fat_per_100g: int = Field(ge=0)
+  carbs_per_100g: int = Field(ge=0)
 
 class ProductResponse(BaseModel):
   id: int
@@ -27,7 +27,7 @@ class ProductResponse(BaseModel):
 class PatchProduct(BaseModel):
   category: ProductCategory | None = None
   name: str | None = None
-  kcal_per_100g: int | None = None
-  protein_per_100g: int | None = None
-  fat_per_100g: int | None = None
-  carbs_per_100g: int  | None = None
+  kcal_per_100g: int | None = Field(default=None, ge=0)
+  protein_per_100g: int | None = Field(default=None, ge=0)
+  fat_per_100g: int | None = Field(default=None, ge=0)
+  carbs_per_100g: int  | None = Field(default=None, ge=0)

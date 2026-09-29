@@ -3,7 +3,7 @@ import pytest
 @pytest.fixture()
 def token_first_user(client, test_first_user):
   response = client.post(
-    "/auth/login",
+    "/auth/user/login",
     data={
       "username": test_first_user.email,
       "password": test_first_user.plain_password
@@ -17,7 +17,7 @@ def token_first_user(client, test_first_user):
 @pytest.fixture()
 def token_second_user(client, test_second_user):
   response = client.post(
-    "/auth/login",
+    "/auth/user/login",
     data={
       "username": test_second_user.email,
       "password": test_second_user.plain_password
