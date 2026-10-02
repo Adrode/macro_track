@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, and_
+from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from utils.dependencies import session_dependency, current_user_dependency
 from utils.exceptions import bad_request_exc, not_found_exc, not_authorized_token_exc
@@ -17,8 +18,11 @@ def add_meal(
   try:
     products = session.scalars(select(models.Product.id).where(
       or_(
-        models.Product.user_id == None,
-        models.Product.user_id == current_user.id
+        models.Product.user_id == current_user.id,
+        and_(
+          models.Product.user_id == None,
+          models.Product.trainer_id == None,
+        )
       )
     )).all()
 
@@ -55,7 +59,7 @@ def add_meal(
     return meal
 
   except IntegrityError:
-    raise bad_request_exc
+    raise bad_request_exc()
   
 @router.delete("/{id}")
 def delete_meal(
@@ -63,16 +67,17 @@ def delete_meal(
   session: session_dependency,
   current_user: current_user_dependency
 ):
-  meal = session.scalars(select(models.Meal).where(models.Meal.id == id)).first()
+  meal = session.scalars(select(models.Meal).where(
+      models.Meal.id == id,
+      models.Meal.user_id == current_user.id
+    )).first()
 
   if not meal:
-    raise not_found_exc
-  if meal.user_id != current_user.id:
-    raise not_authorized_token_exc("Not authorized")
+    raise not_found_exc()
   
   session.delete(meal)
   session.commit()
-  return {"detail": f"Meal id {meal.id} removed"}
+  return {"detail": f"Meal ID {meal.id} removed"}
 
 @router.patch("/{id}", response_model=meal_schemas.MealResponse)
 def patch_meal(
@@ -81,20 +86,28 @@ def patch_meal(
   session: session_dependency,
   current_user: current_user_dependency
 ):
-  meal = session.scalars(select(models.Meal).where(models.Meal.id == id)).first()
+  meal = session.scalars(select(models.Meal)
+    .options(
+      selectinload(models.Meal.meal_products)
+    )
+    .where(
+      models.Meal.id == id,
+      models.Meal.user_id == current_user.id
+    )).first()
   products = session.scalars(select(models.Product.id).where(
     or_(
-      models.Product.user_id == None,
-      models.Product.user_id == current_user.id
+      models.Product.user_id == current_user.id,
+      and_(
+        models.Product.user_id == None,
+        models.Product.trainer_id == None
+      )
     )
   )).all()
 
   products_set = set(products)
 
   if not meal:
-    raise not_found_exc
-  if meal.user_id != current_user.id:
-    raise not_authorized_token_exc("Not authorized")
+    raise not_found_exc()
 
   if data.meal_products:
     for item in meal.meal_products:
@@ -104,7 +117,7 @@ def patch_meal(
 
     for item in data.meal_products:
       if item.product_id not in products_set:
-        raise not_authorized_token_exc("Product not authorized")
+        raise not_found_exc("Product not found")
       session.add(
         models.MealProduct(
           meal_id=meal.id,
@@ -127,12 +140,17 @@ def get_meal(
   session: session_dependency,
   current_user: current_user_dependency
 ):
-  meal = session.scalars(select(models.Meal).where(models.Meal.id == id)).first()
+  meal = session.scalars(select(models.Meal)
+    .options(
+      selectinload(models.Meal.meal_products)
+    )
+    .where(
+      models.Meal.id == id,
+      models.Meal.user_id == current_user.id
+    )).first()
 
   if not meal:
-    raise not_found_exc
-  if meal.user_id != current_user.id:
-    raise not_authorized_token_exc("Not authorized")
+    raise not_found_exc()
   
   products_list = []
   macro_dict = {
@@ -168,10 +186,16 @@ def get_meals(
   session: session_dependency,
   current_user: current_user_dependency
 ):
-  meals = session.scalars(select(models.Meal).where(models.Meal.user_id == current_user.id)).all()
+  meals = session.scalars(select(models.Meal)
+    .options(
+      selectinload(models.Meal.meal_products)
+    )
+    .where(
+      models.Meal.user_id == current_user.id
+    )).all()
 
   if not meals:
-    raise not_found_exc
+    raise not_found_exc()
 
   macro_dict = {
     "sum_of_kcal": 0,
