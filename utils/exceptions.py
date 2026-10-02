@@ -9,7 +9,7 @@ def not_found_exc(detail: str = "Not found"):
 def bad_request_exc(detail: str = "Bad request"):
   return HTTPException(
     status_code=400,
-    detail="Bad request"
+    detail=detail
   )
 
 def not_authorized_token_exc(detail: str = "Unauthorized"):
