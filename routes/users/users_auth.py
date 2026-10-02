@@ -31,7 +31,7 @@ def user_register(data: auth_schemas.CreateUser, session: session_dependency):
 
     return new_user
   except IntegrityError:
-    raise bad_request_exc
+    raise bad_request_exc()
   
 @router.post("/login", response_model=auth_schemas.TokenResponse)
 def user_login(
@@ -41,7 +41,7 @@ def user_login(
   user = session.scalars(select(models.User).where(models.User.email == data.username)).first()
 
   if not user:
-    raise not_authorized_token_exc("Wrong email or password")
+    raise not_authorized_token_exc()
   if not verify_password(data.password, user.hashed_password):
     raise not_authorized_token_exc("Wrong email or password")
   

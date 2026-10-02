@@ -1,4 +1,4 @@
-def test_register_valid_data(client):
+def test_user_register_valid_data(client):
   response = client.post(
     "/auth/user/register",
     json={
@@ -16,7 +16,7 @@ def test_register_valid_data(client):
   assert response.json()["email"] == "adison@gmail.com"
   assert "id" in response.json()
 
-def test_register_invalid_email(client):
+def test_user_register_invalid_email(client):
   response = client.post(
     "/auth/user/register",
     json={
@@ -32,7 +32,23 @@ def test_register_invalid_email(client):
 
   assert response.status_code == 422
 
-def test_register_duplicated_email(client):
+def test_user_register_invalid_data(client):
+  response = client.post(
+    "/auth/user/register",
+    json={
+      "email": 123,
+      "username": 456,
+      "password": 789,
+      "kcal_daily_goal": "ab",
+      "protein_daily_goal": "cd",
+      "fat_daily_goal": "ef",
+      "carbs_daily_goal": "gh"
+    }
+  )
+
+  assert response.status_code == 422
+
+def test_user_register_duplicated_email(client):
   response1 = client.post(
     "/auth/user/register",
     json={
@@ -62,7 +78,37 @@ def test_register_duplicated_email(client):
   assert response1.status_code == 200
   assert response2.status_code == 400
 
-def test_login_valid_data(client, test_first_user):
+def test_user_register_duplicated_username(client):
+  response1 = client.post(
+    "/auth/user/register",
+    json={
+      "email": "adison1@gmail.com",
+      "username": "Nosida",
+      "password": "hashfake",
+      "kcal_daily_goal": 1500,
+      "protein_daily_goal": 100,
+      "fat_daily_goal": 70,
+      "carbs_daily_goal": 150
+    }
+  )
+
+  response2 = client.post(
+    "/auth/user/register",
+    json={
+      "email": "adison2@gmail.com",
+      "username": "Nosida",
+      "password": "hashfake",
+      "kcal_daily_goal": 1500,
+      "protein_daily_goal": 100,
+      "fat_daily_goal": 70,
+      "carbs_daily_goal": 150
+    }
+  )
+
+  assert response1.status_code == 200
+  assert response2.status_code == 400
+
+def test_user_login_valid_data(client, test_first_user):
   response = client.post(
     "/auth/user/login",
     data={
@@ -74,7 +120,7 @@ def test_login_valid_data(client, test_first_user):
   assert response.status_code == 200
   assert "access_token" in response.json()
 
-def test_login_invalid_data(client):
+def test_user_login_invalid_data(client):
   response = client.post(
     "/auth/user/login",
     data={
@@ -85,7 +131,7 @@ def test_login_invalid_data(client):
 
   assert response.status_code == 401
 
-def test_login_invalid_password(client, test_first_user):
+def test_user_login_invalid_password(client, test_first_user):
   response = client.post(
     "/auth/user/login",
     data={
