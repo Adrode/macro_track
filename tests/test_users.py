@@ -62,3 +62,12 @@ def test_patch_me_email_already_taken(client, test_second_user, authenticate_fir
   )
 
   assert response.status_code == 400
+
+def test_patch_me_username_already_taken(client, test_second_user, authenticate_first_user):
+  response = client.patch(
+    "/user/",
+    json={"username": test_second_user.username},
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 400
