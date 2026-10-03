@@ -89,6 +89,7 @@ def patch_meal(
   meal = session.scalars(select(models.Meal)
     .options(
       selectinload(models.Meal.meal_products)
+      .selectinload(models.MealProduct.product)
     )
     .where(
       models.Meal.id == id,
@@ -143,6 +144,7 @@ def get_meal(
   meal = session.scalars(select(models.Meal)
     .options(
       selectinload(models.Meal.meal_products)
+      .selectinload(models.MealProduct.product)
     )
     .where(
       models.Meal.id == id,
@@ -189,6 +191,7 @@ def get_meals(
   meals = session.scalars(select(models.Meal)
     .options(
       selectinload(models.Meal.meal_products)
+      .selectinload(models.MealProduct.product)
     )
     .where(
       models.Meal.user_id == current_user.id
