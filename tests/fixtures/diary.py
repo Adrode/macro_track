@@ -10,7 +10,8 @@ def test_diary_first_user_1(
 ):
   diary = DiaryEntry(
     user_id=test_first_user.id,
-    meal_id=test_meal_first_user_1.id,
+    meal_category=test_meal_first_user_1.category,
+    meal_name=test_meal_first_user_1.name,
     meal_datetime=datetime(2026, 5, 6, 8, 30)
   )
 
@@ -28,7 +29,8 @@ def test_diary_second_user_1(
 ):
   diary = DiaryEntry(
     user_id=test_second_user.id,
-    meal_id=test_meal_second_user_1.id,
+    meal_category=test_meal_second_user_1.category,
+    meal_name=test_meal_second_user_1.name,
     meal_datetime=datetime(2026, 5, 10, 8, 30)
   )
 
@@ -46,7 +48,8 @@ def test_diary_second_user_2(
 ):
   diary = DiaryEntry(
     user_id=test_second_user.id,
-    meal_id=test_meal_second_user_2.id,
+    meal_category=test_meal_second_user_2.category,
+    meal_name=test_meal_second_user_2.name,
     meal_datetime=datetime(2026, 5, 10, 9, 30)
   )
 

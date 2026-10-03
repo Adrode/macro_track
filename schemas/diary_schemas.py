@@ -13,6 +13,14 @@ class CreateDiary(BaseModel):
   meal_id: int
   meal_datetime: datetime = datetime.now(timezone.utc)
 
+class DiaryMealProductResponse(BaseModel):
+  product_name: str
+  kcal_per_100g: float
+  protein_per_100g: float
+  fat_per_100g: float
+  carbs_per_100g: float
+  grams: float
+
 class NewDiaryResponse(BaseModel):
   id: int
   meal_name: str
@@ -22,6 +30,7 @@ class DiariesResponse(BaseModel):
   id: int
   meal_name: str
   meal_datetime: datetime
+  meal_products: list[DiaryMealProductResponse]
 
 class DiariesResponseByCategory(BaseModel):
   id: int
@@ -41,8 +50,13 @@ class DailyMacroLeft(BaseModel):
   fat_left: float
   carbs_left: float
 
+class DiarySummaryResponse(BaseModel):
+  id: int
+  meal_datetime: datetime
+  meal_name: str
+
 class DiariesByDateResponse(BaseModel):
-  diary: list[DiariesResponse]
+  diary: list[DiarySummaryResponse]
   daily_macro_sum: DailyMacroSum
   daily_macro_left: DailyMacroLeft
 

@@ -1,5 +1,6 @@
 from fastapi import APIRouter
-from sqlalchemy import func, select
+from sqlalchemy import func, select, delete
+from sqlalchemy.orm import selectinload
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 from utils.dependencies import session_dependency, current_user_dependency
@@ -16,10 +17,18 @@ def post_diary(
   current_user: current_user_dependency
 ):
   try:
-    meal = session.scalars(select(models.Meal).where(models.Meal.id == data.meal_id)).first()
+    meal = session.scalars(select(models.Meal)
+      .options(
+        selectinload(models.Meal.meal_products)
+        .selectinload(models.MealProduct.product)
+      )
+      .where(
+        models.Meal.id == data.meal_id,
+        models.Meal.user_id == current_user.id
+    )).first()
 
-    if not meal or meal.user_id != current_user.id:
-      raise not_authorized_token_exc("Not authorized")
+    if not meal:
+      raise not_found_exc()
 
     new_diary = models.DiaryEntry(
       user_id=current_user.id,
@@ -54,18 +63,25 @@ def post_diary(
     return response
   
   except IntegrityError:
-    raise bad_request_exc
+    raise bad_request_exc()
   
 @router.get("/entry/{id}", response_model=diary_schemas.DiariesResponse)
-def get_diary_by_id(
+def get_diary(
   id: int,
   session: session_dependency,
   current_user: current_user_dependency
 ):
-  diary = session.scalars(select(models.DiaryEntry).where(models.DiaryEntry.id == id)).first()
+  diary = session.scalars(select(models.DiaryEntry)
+    .options(
+      selectinload(models.DiaryEntry.diary_meal_products)
+    )
+    .where(
+      models.DiaryEntry.id == id,
+      models.DiaryEntry.user_id == current_user.id
+  )).first()
 
-  if not diary or diary.user_id != current_user.id:
-    raise not_authorized_token_exc("Diary not authorized")
+  if not diary:
+    raise not_found_exc()
 
   meal_products = []
   for item in diary.diary_meal_products:
@@ -93,14 +109,18 @@ def get_diaries_by_date(
   session: session_dependency,
   current_user: current_user_dependency
 ):
-  diaries = session.scalars(select(models.DiaryEntry).where(
+  diaries = session.scalars(select(models.DiaryEntry)
+    .options(
+      selectinload(models.DiaryEntry.diary_meal_products)
+    )
+    .where(
       models.DiaryEntry.user_id == current_user.id,
       func.date(models.DiaryEntry.meal_datetime) == date.date()
     )
   ).all()
 
   if not diaries:
-    raise not_authorized_token_exc("Diaries not found")
+    raise not_found_exc()
   
   response = []
   daily_macro = {
@@ -137,14 +157,16 @@ def get_diaries_by_date(
   }
 
 @router.get("/", response_model=list[diary_schemas.DiariesResponseByCategory])
-def get_all_diaries(
+def get_diaries(
   session: session_dependency,
   current_user: current_user_dependency
 ):
-  diaries = session.scalars(select(models.DiaryEntry).where(models.DiaryEntry.user_id == current_user.id)).all()
+  diaries = session.scalars(select(models.DiaryEntry).where(
+    models.DiaryEntry.user_id == current_user.id
+  )).all()
 
   if not diaries:
-    raise not_authorized_token_exc("Diaries not found")
+    raise not_found_exc()
   
   response = []
   for item in diaries:
@@ -163,16 +185,20 @@ def delete_diary(
   session: session_dependency,
   current_user: current_user_dependency  
 ):
-  diary = session.scalars(select(models.DiaryEntry).where(models.DiaryEntry.id == id)).first()
+  diary = session.scalars(select(models.DiaryEntry).where(
+    models.DiaryEntry.id == id,
+    models.DiaryEntry.user_id == current_user.id
+  )).first()
 
   if not diary:
-    raise not_authorized_token_exc("Diaries not found")
-  if diary.user_id != current_user.id:
-    raise not_authorized_token_exc("Not authorized")
-  
+    raise not_found_exc()
+
+  session.execute(delete(models.DiaryMealProduct).where(models.DiaryMealProduct.diary_id == diary.id))
+  session.flush()
+
   session.delete(diary)
   session.commit()
-  return {"detail": f"Diary by ID {diary.id} removed from database"}
+  return {"detail": f"Diary ID {diary.id} removed"}
 
 @router.patch("/{id}", response_model=diary_schemas.PatchDiaryResponse)
 def patch_diary(
@@ -181,31 +207,36 @@ def patch_diary(
   session: session_dependency,
   current_user: current_user_dependency
 ):
-  diary = session.scalars(select(models.DiaryEntry).where(models.DiaryEntry.id == id)).first()
+  diary = session.scalars(select(models.DiaryEntry).where(
+    models.DiaryEntry.id == id,
+    models.DiaryEntry.user_id == current_user.id
+  )).first()
   
   if not diary:
-    raise not_authorized_token_exc("Diaries not found")
-  if diary.user_id != current_user.id:
-    raise not_authorized_token_exc("Not authorized")
+    raise not_found_exc()
 
   to_patch_diary = data.model_dump(exclude_unset=True)
   
   if data.meal_id:
-    meal = session.scalars(select(models.Meal).where(models.Meal.id == data.meal_id)).first()
+    meal = session.scalars(select(models.Meal)
+      .options(
+        selectinload(models.Meal.meal_products)
+        .selectinload(models.MealProduct.product)
+      )
+      .where(
+        models.Meal.id == data.meal_id,
+        models.Meal.user_id == current_user.id
+    )).first()
+
     if not meal:
-      raise not_authorized_token_exc("Meal not found")
-    if meal.user_id != current_user.id:
-      raise not_authorized_token_exc("Meal not authorized")
+      raise not_found_exc()
 
     to_patch_diary.update({
       "meal_category": meal.category,
       "meal_name": meal.name
     })
 
-    diary_meal_products = session.scalars(select(models.DiaryMealProduct).where(models.DiaryMealProduct.diary_id == diary.id)).all()
-
-    for item in diary_meal_products:
-      session.delete(item)
+    session.execute(delete(models.DiaryMealProduct).where(models.DiaryMealProduct.diary_id == diary.id))
     session.flush()
 
     for item in meal.meal_products:
