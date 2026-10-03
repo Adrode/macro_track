@@ -42,7 +42,7 @@ def add_meal(
 
     for item in data.meal_products:
       if item.product_id not in products_set:
-        raise not_authorized_token_exc("Not authorized")
+        raise not_found_exc("Product not found")
       meal_products_list.append(
         models.MealProduct(
           meal_id=meal.id,

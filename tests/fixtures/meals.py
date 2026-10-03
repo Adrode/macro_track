@@ -11,7 +11,8 @@ def test_meal_first_user_1(
   meal = Meal(
     category="breakfast",
     name="Oatmeal",
-    user_id=test_first_user.id
+    user_id=test_first_user.id,
+    source="user"
   )
 
   db_session.add(meal)
@@ -44,7 +45,8 @@ def test_meal_second_user_1(
   meal = Meal(
     category="dinner",
     name="Kasza manna damn",
-    user_id=test_second_user.id
+    user_id=test_second_user.id,
+    source="user"
   )
 
   db_session.add(meal)
@@ -71,8 +73,8 @@ def test_meal_second_user_2(
   meal = Meal(
     category="supper",
     name="Pijany dzik",
-    is_active=False,
-    user_id=test_second_user.id
+    user_id=test_second_user.id,
+    source="user"
   )
 
   db_session.add(meal)

@@ -1,6 +1,6 @@
 def test_add_meal_valid_data(client, authenticate_first_user, test_first_product, test_public_product):
   response = client.post(
-    "/meals/",
+    "/user/meals/",
     json={
       "category": "dinner",
       "name": "Ziemniaczki and schabowi",
@@ -23,7 +23,7 @@ def test_add_meal_valid_data(client, authenticate_first_user, test_first_product
 
 def test_add_meal_invalid_data(client, authenticate_first_user, test_public_product):
   response = client.post(
-    "/meals/",
+    "/user/meals/",
     json={
       "category": "something",
       "name": 15,
@@ -43,9 +43,22 @@ def test_add_meal_invalid_data(client, authenticate_first_user, test_public_prod
 
   assert response.status_code == 422
 
+def test_add_meal_without_meal_products(client, authenticate_first_user, test_public_product):
+  response = client.post(
+    "/user/meals/",
+    json={
+      "category": "dinner",
+      "name": "Pierogies",
+      "meal_products": []
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 200
+
 def test_add_meal_unauthorized(client, test_first_product):
   response = client.post(
-    "/meals/",
+    "/user/meals/",
     json={
       "category": "dinner",
       "name": "Ziemniaczki and schabowi",
@@ -66,7 +79,7 @@ def test_add_meal_unauthorized(client, test_first_product):
 
 def test_add_meal_product_unauthorized(client, authenticate_first_user, test_second_product):
   response = client.post(
-    "/meals/",
+    "/user/meals/",
     json={
       "category": "dinner",
       "name": "Ziemniaczki and schabowi",
@@ -80,11 +93,11 @@ def test_add_meal_product_unauthorized(client, authenticate_first_user, test_sec
     headers=authenticate_first_user
   )
 
-  assert response.status_code == 401
+  assert response.status_code == 404
 
 def test_add_meal_invalid_product_id(client, authenticate_first_user):
   response = client.post(
-    "/meals/",
+    "/user/meals/",
     json={
       "category": "breakfast",
       "name": "Some shit",
@@ -98,14 +111,14 @@ def test_add_meal_invalid_product_id(client, authenticate_first_user):
     headers=authenticate_first_user
   )
 
-  assert response.status_code == 401
+  assert response.status_code == 404
 
 def test_add_meal_invalid_product_grams(client, authenticate_first_user, test_first_product):
   response = client.post(
-    "/meals/",
+    "/user/meals/",
     json={
       "category": "breakfast",
-      "name": "Some shit",
+      "name": "Someshing",
       "meal_products": [
         {
           "product_id": test_first_product.id,
@@ -120,7 +133,7 @@ def test_add_meal_invalid_product_grams(client, authenticate_first_user, test_fi
 
 def test_delete_meal_valid_data(client, authenticate_first_user, test_meal_first_user_1):
   response = client.delete(
-    f"/meals/{test_meal_first_user_1.id}",
+    f"/user/meals/{test_meal_first_user_1.id}",
     headers=authenticate_first_user
   )
 
@@ -129,14 +142,14 @@ def test_delete_meal_valid_data(client, authenticate_first_user, test_meal_first
 
 def test_delete_meal_unauthorized(client, test_meal_first_user_1):
   response = client.delete(
-    f"/meals/{test_meal_first_user_1.id}"
+    f"/user/meals/{test_meal_first_user_1.id}"
   )
 
   assert response.status_code == 401
 
 def test_delete_meal_not_found(client, authenticate_first_user):
   response = client.delete(
-    "/meals/0",
+    "/user/meals/0",
     headers=authenticate_first_user
   )
 
@@ -144,72 +157,18 @@ def test_delete_meal_not_found(client, authenticate_first_user):
 
 def test_delete_meal_owned_by_other_user(client, authenticate_first_user, test_meal_second_user_1):
   response = client.delete(
-    f"/meals/{test_meal_second_user_1.id}",
-    headers=authenticate_first_user
-  )
-
-  assert response.status_code == 401
-
-def test_patch_is_active_valid_data(client, authenticate_first_user, test_meal_first_user_1):
-  response = client.patch(
-    f"/meals/is_active/{test_meal_first_user_1.id}",
-    json={
-      "is_active": False
-    },
-    headers=authenticate_first_user
-  )
-
-  assert response.status_code == 200
-
-def test_patch_is_active_invalid_data(client, authenticate_first_user, test_meal_first_user_1):
-  response = client.patch(
-    f"/meals/is_active/{test_meal_first_user_1.id}",
-    json={
-      "is_active": "kekw"
-    },
-    headers=authenticate_first_user
-  )
-
-  assert response.status_code == 422
-
-def test_patch_is_active_unauthorized(client, test_meal_first_user_1):
-  response = client.patch(
-    f"/meals/is_active/{test_meal_first_user_1.id}",
-    json={
-      "is_acitve": False
-    }
-  )
-
-  assert response.status_code == 401
-
-def test_patch_is_active_meal_not_found(client, authenticate_first_user):
-  response = client.patch(
-    "/meals/is_active/0",
-    json={
-      "is_active": False
-      },
+    f"/user/meals/{test_meal_second_user_1.id}",
     headers=authenticate_first_user
   )
 
   assert response.status_code == 404
 
-def test_patch_is_active_meal_owned_by_other_user(client, authenticate_first_user, test_meal_second_user_1):
-  response = client.patch(
-    f"/meals/is_active/{test_meal_second_user_1.id}",
-    json={
-      "is_active": False
-      },
-    headers=authenticate_first_user
-  )
-
-  assert response.status_code == 401
-
 def test_patch_meal_valid_data(client, authenticate_first_user, test_meal_first_user_1, test_public_product):
   response = client.patch(
-    f"/meals/{test_meal_first_user_1.id}",
+    f"/user/meals/{test_meal_first_user_1.id}",
     json={
       "category": "dinner",
-      "name": "Podżabanyj",
+      "name": "Abrakadabra",
       "meal_products": [
         {
           "product_id": test_public_product.id,
@@ -222,11 +181,32 @@ def test_patch_meal_valid_data(client, authenticate_first_user, test_meal_first_
 
   assert response.status_code == 200
   assert "dinner" in response.json()["category"]
-  assert "Podżabanyj" in response.json()["name"]
+  assert "Abrakadabra" in response.json()["name"]
+
+def test_patch_meal_no_changes(client, authenticate_first_user, test_meal_first_user_1):
+  response = client.patch(
+    f"/user/meals/{test_meal_first_user_1.id}",
+    json={},
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 200
+
+def test_patch_meal_one_change(client, authenticate_first_user, test_meal_first_user_1, test_public_product):
+  response = client.patch(
+    f"/user/meals/{test_meal_first_user_1.id}",
+    json={
+      "name": "Capybara"
+    },
+    headers=authenticate_first_user
+  )
+
+  assert response.status_code == 200
+  assert "Capybara" in response.json()["name"]
 
 def test_patch_meal_invalid_data(client, authenticate_first_user, test_meal_first_user_1):
   response = client.patch(
-    f"/meals/{test_meal_first_user_1.id}",
+    f"/user/meals/{test_meal_first_user_1.id}",
     json={
       "category": "nyb",
       "name": 120,
@@ -244,10 +224,10 @@ def test_patch_meal_invalid_data(client, authenticate_first_user, test_meal_firs
 
 def test_patch_meal_unauthorized(client, test_meal_first_user_1, test_first_product):
   response = client.patch(
-    f"/meals/{test_meal_first_user_1.id}",
+    f"/user/meals/{test_meal_first_user_1.id}",
     json={
       "category": "dinner",
-      "name": "Podżabanyj",
+      "name": "Cytryna",
       "meal_products": [
         {
           "product_id": test_first_product.id,
@@ -261,18 +241,18 @@ def test_patch_meal_unauthorized(client, test_meal_first_user_1, test_first_prod
 
 def test_patch_meal_owned_by_other_user(client, authenticate_first_user, test_meal_second_user_1):
   response = client.patch(
-    f"/meals/{test_meal_second_user_1.id}",
+    f"/user/meals/{test_meal_second_user_1.id}",
     json={
       "name": "kekw"
     },
     headers=authenticate_first_user
   )
 
-  assert response.status_code == 401
+  assert response.status_code == 404
 
 def test_patch_meal_not_found(client, authenticate_first_user):
   response = client.patch(
-    "/meals/0",
+    "/user/meals/0",
     json={
       "name": "Kekw"
     },
@@ -283,7 +263,7 @@ def test_patch_meal_not_found(client, authenticate_first_user):
 
 def test_patch_meal_unathorized_product(client, authenticate_first_user, test_meal_first_user_1, test_second_product):
   response = client.patch(
-    f"/meals/{test_meal_first_user_1.id}",
+    f"/user/meals/{test_meal_first_user_1.id}",
     json={
       "meal_products": [
         {
@@ -295,11 +275,12 @@ def test_patch_meal_unathorized_product(client, authenticate_first_user, test_me
     headers=authenticate_first_user
   )
 
-  assert response.status_code == 401
+  assert response.status_code == 404
+  assert response.json()["detail"] == "Product not found"
 
 def test_get_meal_valid_data(client, authenticate_first_user, test_meal_first_user_1):
   response = client.get(
-    f"/meals/{test_meal_first_user_1.id}",
+    f"/user/meals/{test_meal_first_user_1.id}",
     headers=authenticate_first_user
   )
 
@@ -309,14 +290,14 @@ def test_get_meal_valid_data(client, authenticate_first_user, test_meal_first_us
 
 def test_get_meal_unathorized(client, test_meal_first_user_1):
   response = client.get(
-    f"/meals/{test_meal_first_user_1.id}"
+    f"/user/meals/{test_meal_first_user_1.id}"
   )
 
   assert response.status_code == 401
 
 def test_get_meal_not_found(client, authenticate_first_user):
   response = client.get(
-    "/meals/0",
+    "/user/meals/0",
     headers=authenticate_first_user
   )
 
@@ -324,59 +305,24 @@ def test_get_meal_not_found(client, authenticate_first_user):
 
 def test_get_meal_owned_by_other_user(client, authenticate_first_user, test_meal_second_user_1):
   response = client.get(
-    f"/meals/{test_meal_second_user_1.id}",
-    headers=authenticate_first_user
-  )
-
-  assert response.status_code == 401
-
-def test_get_is_active_meals_valid_data(client, authenticate_first_user, test_meal_first_user_1):
-  response = client.get(
-    "/meals/",
-    headers=authenticate_first_user
-  )
-  
-  assert response.status_code == 200
-  for item in response.json():
-    assert item["is_active"] == True
-
-def test_get_is_active_meals_unathorized(client, test_meal_first_user_1):
-  response = client.get(
-    "/meals/"
-  )
-
-  assert response.status_code == 401
-
-def test_get_is_active_meals_not_found(client, authenticate_first_user):
-  response = client.get(
-    "/meals/",
+    f"/user/meals/{test_meal_second_user_1.id}",
     headers=authenticate_first_user
   )
 
   assert response.status_code == 404
 
-# ---
-def test_get_archived_meals_valid_data(client, authenticate_second_user, test_meal_second_user_2):
+def test_get_meals_valid_data(client, authenticate_second_user, test_meal_second_user_1, test_meal_second_user_2):
   response = client.get(
-    "/meals/archived/",
+    "/user/meals/",
     headers=authenticate_second_user
   )
-  
+
   assert response.status_code == 200
-  for item in response.json():
-    assert item["is_active"] == False
 
-def test_get_archived_meals_unathorized(client, test_meal_second_user_2):
+def test_get_meals_not_found(client, authenticate_second_user):
   response = client.get(
-    "/meals/archived/",
-  )
-
-  assert response.status_code == 401
-
-def test_get_archived_meals_not_found(client, authenticate_first_user):
-  response = client.get(
-    "/meals/archived/",
-    headers=authenticate_first_user
+    "/user/meals/",
+    headers=authenticate_second_user
   )
 
   assert response.status_code == 404
