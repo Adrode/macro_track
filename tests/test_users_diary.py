@@ -97,6 +97,57 @@ def test_get_diaries_by_date_valid_data(client, authenticate_second_user, test_d
 
   assert response.status_code == 200
 
+def test_get_diaries_by_date_proper_macros_counted(client, authenticate_second_user, test_meal_second_user_1, test_meal_second_user_2):
+  response = client.post(
+    "/user/diary/",
+    json={
+      "meal_id": test_meal_second_user_1.id,
+      "meal_datetime": datetime(2020, 10, 10, 15, 00, 00).isoformat()
+    },
+    headers=authenticate_second_user
+  )
+  assert response.status_code == 200
+
+  response = client.post(
+    "/user/diary/",
+    json={
+      "meal_id": test_meal_second_user_2.id,
+      "meal_datetime": datetime(2020, 10, 10, 17, 00, 00).isoformat()
+    },
+    headers=authenticate_second_user
+  )
+  assert response.status_code == 200
+
+  response = client.get(
+    f"/user/diary/{datetime(2020, 10, 10)}",
+    headers=authenticate_second_user
+  )
+  assert response.status_code == 200
+
+  expected_macro_sum = {
+    "sum_of_kcal": 805,
+    "sum_of_protein": 78,
+    "sum_of_fat": 25.5,
+    "sum_of_carbs": 205.5
+  }
+
+  expected_macro_left = {
+    "kcal_left": 2195,
+    "protein_left": 72,
+    "fat_left": 44.5,
+    "carbs_left": 94.5
+  }
+
+  assert len(response.json()["diary"]) == 2
+  assert response.json()["daily_macro_sum"]["sum_of_kcal"] == expected_macro_sum["sum_of_kcal"]
+  assert response.json()["daily_macro_sum"]["sum_of_protein"] == expected_macro_sum["sum_of_protein"]
+  assert response.json()["daily_macro_sum"]["sum_of_fat"] == expected_macro_sum["sum_of_fat"]
+  assert response.json()["daily_macro_sum"]["sum_of_carbs"] == expected_macro_sum["sum_of_carbs"]
+  assert response.json()["daily_macro_left"]["kcal_left"] == expected_macro_left["kcal_left"]
+  assert response.json()["daily_macro_left"]["protein_left"] == expected_macro_left["protein_left"]
+  assert response.json()["daily_macro_left"]["fat_left"] == expected_macro_left["fat_left"]
+  assert response.json()["daily_macro_left"]["carbs_left"] == expected_macro_left["carbs_left"]
+
 def test_get_diaries_by_date_invalid_data(client, authenticate_second_user, test_diary_second_user_1, test_diary_second_user_2):
   response = client.get(
     "/user/diary/0",
