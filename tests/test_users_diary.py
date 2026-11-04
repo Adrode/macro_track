@@ -139,14 +139,8 @@ def test_get_diaries_by_date_proper_macros_counted(client, authenticate_second_u
   }
 
   assert len(response.json()["diary"]) == 2
-  assert response.json()["daily_macro_sum"]["sum_of_kcal"] == expected_macro_sum["sum_of_kcal"]
-  assert response.json()["daily_macro_sum"]["sum_of_protein"] == expected_macro_sum["sum_of_protein"]
-  assert response.json()["daily_macro_sum"]["sum_of_fat"] == expected_macro_sum["sum_of_fat"]
-  assert response.json()["daily_macro_sum"]["sum_of_carbs"] == expected_macro_sum["sum_of_carbs"]
-  assert response.json()["daily_macro_left"]["kcal_left"] == expected_macro_left["kcal_left"]
-  assert response.json()["daily_macro_left"]["protein_left"] == expected_macro_left["protein_left"]
-  assert response.json()["daily_macro_left"]["fat_left"] == expected_macro_left["fat_left"]
-  assert response.json()["daily_macro_left"]["carbs_left"] == expected_macro_left["carbs_left"]
+  assert response.json()["daily_macro_sum"] == expected_macro_sum
+  assert response.json()["daily_macro_left"] == expected_macro_left
 
 def test_get_diaries_by_date_invalid_data(client, authenticate_second_user, test_diary_second_user_1, test_diary_second_user_2):
   response = client.get(
@@ -186,6 +180,25 @@ def test_get_diaries_valid_data(client, authenticate_second_user, test_diary_sec
   )
 
   assert response.status_code == 200
+  assert "Pijany dzik" in response.json()[1]["meal_name"]
+  assert len(response.json()) == 2
+
+def test_get_diaries_zero_entries(client, authenticate_first_user, test_diary_first_user_1):
+  response = client.delete(
+      f"/user/diary/{test_diary_first_user_1.id}",
+      headers=authenticate_first_user
+    )
+
+  assert "ID 1" in response.json()["detail"]
+  
+  response = client.get(
+    "/user/diary/",
+    headers=authenticate_first_user
+  )
+
+  assert len(response.json()) == 1
+
+  
 
 def test_get_diaries_unauthorized(client, test_diary_second_user_1, test_diary_second_user_2):
   response = client.get(
@@ -209,6 +222,7 @@ def test_delete_diary_valid_data(client, authenticate_first_user, test_diary_fir
   )
 
   assert response.status_code == 200
+  assert "ID 1" in response.json()["detail"]
 
 def test_delete_diary_removes_related_products(
   client,
@@ -283,7 +297,7 @@ def test_patch_diary_replaces_meal_and_products(
 ):
   new_meal = Meal(
     category="lunch",
-    name="Risotto",
+    name="Kaszotto",
     user_id=test_first_user.id,
     source="user"
   )
@@ -308,7 +322,7 @@ def test_patch_diary_replaces_meal_and_products(
   )
 
   assert response.status_code == 200
-  assert response.json()["meal_name"] == "Risotto"
+  assert response.json()["meal_name"] == "Kaszotto"
   assert db_session.query(DiaryMealProduct).filter_by(diary_id=test_diary_first_user_1.id).count() == 1
 
 
