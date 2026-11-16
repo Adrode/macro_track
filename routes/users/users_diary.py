@@ -120,7 +120,21 @@ def get_diaries_by_date(
   ).all()
 
   if not diaries:
-    raise not_found_exc()
+    return {
+      "diary": [],
+      "daily_macro_sum": {
+        "sum_of_kcal": 0,
+        "sum_of_protein": 0,
+        "sum_of_fat": 0,
+        "sum_of_carbs": 0
+    },
+      "daily_macro_left": {
+        "kcal_left": 0,
+        "protein_left": 0,
+        "fat_left": 0,
+        "carbs_left": 0
+      }
+    }
   
   response = []
   daily_macro = {
@@ -166,7 +180,7 @@ def get_diaries(
   )).all()
 
   if not diaries:
-    raise not_found_exc()
+    return []
   
   response = []
   for item in diaries:

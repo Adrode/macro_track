@@ -148,7 +148,15 @@ def test_get_diaries_by_date_invalid_data(client, authenticate_second_user, test
     headers=authenticate_second_user
   )
 
-  assert response.status_code == 404
+  assert response.json()["diary"] == []
+  assert response.json()["daily_macro_sum"]["sum_of_kcal"] == 0
+  assert response.json()["daily_macro_sum"]["sum_of_protein"] == 0
+  assert response.json()["daily_macro_sum"]["sum_of_fat"] == 0
+  assert response.json()["daily_macro_sum"]["sum_of_carbs"] == 0
+  assert response.json()["daily_macro_left"]["kcal_left"] == 0
+  assert response.json()["daily_macro_left"]["protein_left"] == 0
+  assert response.json()["daily_macro_left"]["fat_left"] == 0
+  assert response.json()["daily_macro_left"]["carbs_left"] == 0
 
 def test_get_diaries_by_date_unauthorized(client, test_diary_second_user_1, test_diary_second_user_2):
   response = client.get(
@@ -163,7 +171,7 @@ def test_get_diaries_by_date_not_found(client, authenticate_second_user):
     headers=authenticate_second_user
   )
 
-  assert response.status_code == 404
+  assert response.json()["diary"] == []
 
 def test_get_diaries_by_date_owned_by_other_user(client, authenticate_second_user, test_diary_first_user_1):
   response = client.get(
@@ -171,7 +179,7 @@ def test_get_diaries_by_date_owned_by_other_user(client, authenticate_second_use
     headers=authenticate_second_user
   )
 
-  assert response.status_code == 404
+  assert response.json()["diary"] == []
 
 def test_get_diaries_valid_data(client, authenticate_second_user, test_diary_second_user_1, test_diary_second_user_2):
   response = client.get(
@@ -196,9 +204,7 @@ def test_get_diaries_zero_entries(client, authenticate_first_user, test_diary_fi
     headers=authenticate_first_user
   )
 
-  assert len(response.json()) == 1
-
-  
+  assert len(response.json()) == 0
 
 def test_get_diaries_unauthorized(client, test_diary_second_user_1, test_diary_second_user_2):
   response = client.get(
@@ -213,7 +219,7 @@ def test_get_diaries_not_found(client, authenticate_first_user):
     headers=authenticate_first_user
   )
 
-  assert response.status_code == 404
+  assert response.json() == []
 
 def test_delete_diary_valid_data(client, authenticate_first_user, test_diary_first_user_1):
   response = client.delete(
