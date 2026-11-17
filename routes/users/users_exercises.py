@@ -3,7 +3,7 @@ from sqlalchemy import select, or_, and_
 from models import models
 from schemas import exercise_schemas
 from utils.dependencies import session_dependency, current_user_dependency
-from utils.exceptions import not_authorized_token_exc
+from utils.exceptions import not_found_exc
 
 router = APIRouter()
 
@@ -45,7 +45,7 @@ def get_exercise(
     )).first()
 
     if not exercise:
-        raise not_authorized_token_exc("Not authorized")
+        raise not_found_exc()
 
     return exercise
 
@@ -65,7 +65,7 @@ def get_exercises(
     )).all()
 
     if not exercises:
-        raise not_authorized_token_exc("Not authorized")
+        raise not_found_exc()
 
     return exercises
 
@@ -82,7 +82,7 @@ def delete_exercise(
     )).first()
 
     if not exercise or exercise.user_id != current_user.id:
-        raise not_authorized_token_exc("Not authorized")
+        raise not_found_exc()
 
     session.delete(exercise)
     session.commit()
@@ -102,7 +102,7 @@ def patch_exercise(
     )).first()
 
     if not exercise:
-        raise not_authorized_token_exc("Not authorized")
+        raise not_found_exc()
 
     to_patch = data.model_dump(exclude_unset=True)
     for key, value in to_patch.items():
