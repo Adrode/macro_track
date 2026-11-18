@@ -5,14 +5,15 @@ from sqlalchemy import create_engine, StaticPool, delete
 from sqlalchemy.orm import sessionmaker
 from main import app
 from database.database import get_db
-from models.models import Base, Product, User, Meal, MealProduct, DiaryEntry, DiaryMealProduct
+from models.models import Base, Product, User, Meal, MealProduct, DiaryEntry, DiaryMealProduct, Exercise
 
 pytest_plugins = (
   "tests.fixtures.auth",
   "tests.fixtures.users",
   "tests.fixtures.products",
   "tests.fixtures.meals",
-  "tests.fixtures.diary"
+  "tests.fixtures.diary",
+  "tests.fixtures.exercises"
 )
 
 engine = create_engine(
@@ -59,4 +60,5 @@ def clean_db(db_session):
   db_session.execute(delete(Meal))
   db_session.execute(delete(DiaryEntry))
   db_session.execute(delete(DiaryMealProduct))
+  db_session.execute(delete(Exercise))
   db_session.commit()

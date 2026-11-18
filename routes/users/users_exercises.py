@@ -65,7 +65,7 @@ def get_exercises(
     )).all()
 
     if not exercises:
-        raise not_found_exc()
+        return []
 
     return exercises
 
@@ -81,7 +81,7 @@ def delete_exercise(
         models.Exercise.trainer_id == None
     )).first()
 
-    if not exercise or exercise.user_id != current_user.id:
+    if not exercise:
         raise not_found_exc()
 
     session.delete(exercise)
