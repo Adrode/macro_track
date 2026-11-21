@@ -7,6 +7,9 @@ def test_create_exercise_valid_data(client, authenticate_first_user):
 
     assert response.status_code == 200
     assert response.json()["name"] == "Hip thrusts"
+    assert response.json()["main_muscles"] == ["glutes"]
+    assert response.json()["side_muscles"] == []
+    assert response.json()["description"] == None
 
     response = client.get("/user/exercises/", headers=authenticate_first_user)
 
@@ -92,15 +95,11 @@ def test_get_exercises_valid_data(
 ):
     response = client.get("/user/exercises/", headers=authenticate_second_user)
 
+    exercises_names = ["Pull ups", "Squats", "Deadlift"]
+    for item in response.json():
+        assert item["name"] in exercises_names
     assert response.status_code == 200
     assert len(response.json()) == 3
-
-
-def test_get_exercises_no_items(client, authenticate_second_user):
-    response = client.get("/user/exercises/", headers=authenticate_second_user)
-
-    assert response.status_code == 200
-    assert response.json() == []
 
 
 def test_get_exercises_no_items(client, authenticate_second_user):
@@ -184,14 +183,20 @@ def test_patch_exercise_valid_data(
 ):
     response = client.patch(
         f"/user/exercises/{test_exercise_first_user_1.id}",
-        json={"name": "Kappa", "side_muslces": ["biceps"], "description": None},
+        json={
+            "name": "Kappa",
+            "main_muscles": ["triceps"],
+            "side_muscles": ["biceps"],
+            "description": None
+        },
         headers=authenticate_first_user,
     )
 
     assert response.status_code == 200
     assert response.json()["name"] == "Kappa"
     assert response.json()["description"] == None
-    assert response.json()["main_muscles"] == ["chest", "triceps"]
+    assert response.json()["main_muscles"] == ["triceps"]
+    assert response.json()["side_muscles"] == ["biceps"]
 
 
 def test_patch_exercise_no_data(
@@ -232,7 +237,7 @@ def test_patch_exercise_invalid_data(
 def test_patch_exercise_unauthorized(client, test_exercise_first_user_1):
     response1 = client.patch(
         f"/user/exercises/{test_exercise_first_user_1.id}",
-        json={"name": "Kappa", "side_muslces": ["biceps"]},
+        json={"name": "Kappa", "side_muscles": ["biceps"]},
     )
 
     assert response1.status_code == 401
@@ -255,6 +260,16 @@ def test_patch_exercise_does_not_exist(client, authenticate_second_user):
         "/user/exercises/0",
         json={"name": "Kappa", "side_muslces": ["biceps"]},
         headers=authenticate_second_user,
+    )
+
+    assert response1.status_code == 404
+
+
+def test_patch_exercise_public(client, authenticate_first_user, test_exercise_public):
+    response1 = client.patch(
+        f"/user/exercises/{test_exercise_public.id}",
+        json={"name": "Kappa", "side_muslces": ["biceps"]},
+        headers=authenticate_first_user
     )
 
     assert response1.status_code == 404
