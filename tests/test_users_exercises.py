@@ -183,3 +183,79 @@ def test_delete_exercise_public(client, authenticate_first_user, test_exercise_p
     assert response.status_code == 200
     assert len(response.json()) == 1
     assert response.json()[0]["name"] == "Deadlift"
+
+
+def test_patch_exercise_valid_data(client, authenticate_first_user, test_exercise_first_user_1):
+    response = client.patch(
+        f"/user/exercises/{test_exercise_first_user_1.id}",
+        json={
+            "name": "Kappa",
+            "side_muslces": ["biceps"],
+            "description": None
+        },
+        headers=authenticate_first_user
+    )
+
+    assert response.status_code == 200
+    assert response.json()["name"] == "Kappa"
+    assert response.json()["description"] == None
+    assert response.json()["main_muscles"] == ["chest", "triceps"]
+
+
+def test_patch_exercise_no_data(client, authenticate_first_user, test_exercise_first_user_1):
+    response1 = client.patch(
+        f"/user/exercises/{test_exercise_first_user_1.id}",
+        json={},
+        headers=authenticate_first_user
+    )
+
+    assert response1.status_code == 200
+    assert response1.json()["name"] == "Push ups"
+
+    response2 = client.get(
+        f"/user/exercises/{test_exercise_first_user_1.id}",
+        headers=authenticate_first_user
+    )
+
+    assert response2.status_code == 200
+    assert response2.json()["name"] == "Push ups"
+
+    assert response1.json() == response2.json()
+
+
+def test_patch_exercise_invalid_data(client, authenticate_first_user, test_exercise_first_user_1):
+    response1 = client.patch(
+        f"/user/exercises/{test_exercise_first_user_1.id}",
+        json={
+            "name": 15,
+            "age": "200"
+        },
+        headers=authenticate_first_user
+    )
+
+    assert response1.status_code == 422
+
+
+def test_patch_exercise_unauthorized(client, test_exercise_first_user_1):
+    response1 = client.patch(
+        f"/user/exercises/{test_exercise_first_user_1.id}",
+        json={
+            "name": "Kappa",
+            "side_muslces": ["biceps"]
+        }
+    )
+
+    assert response1.status_code == 401
+
+
+def test_patch_exercise_owned_by_other_user(client, authenticate_second_user, test_exercise_first_user_1):
+    response1 = client.patch(
+        f"/user/exercises/{test_exercise_first_user_1.id}",
+        json={
+            "name": "Kappa",
+            "side_muslces": ["biceps"]
+        },
+        headers=authenticate_second_user
+    )
+
+    assert response1.status_code == 404
