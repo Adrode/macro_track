@@ -4,7 +4,7 @@ from sqlalchemy.orm import selectinload
 from models import models
 from schemas import training_plans_schemas
 from utils.dependencies import session_dependency, current_user_dependency
-from utils.exceptions import not_authorized_token_exc
+from utils.exceptions import not_found_exc
 
 router = APIRouter()
 
@@ -41,7 +41,7 @@ def create_training_plan(
     found_exercise_ids = {exercise.id for exercise in exercises}
 
     if not exercises_ids.issubset(found_exercise_ids):
-        raise not_authorized_token_exc("Not authorized")
+        raise not_found_exc()
 
     for index1, item1 in enumerate(data.training_units):
         new_training_unit = models.TrainingUnit(
@@ -103,7 +103,7 @@ def get_training_plan(
     )).first()
 
     if not training_plan:
-        raise not_authorized_token_exc("Not authorized")
+        raise not_found_exc()
 
     training_units = []
     for unit in training_plan.training_units:
@@ -150,7 +150,7 @@ def get_training_plans(
     )).all()
 
     if not training_plans and training_plans != []:
-        raise not_authorized_token_exc("Not authorized")
+        raise not_found_exc()
 
     response = []
     for training_plan in training_plans:
@@ -180,7 +180,7 @@ def delete_training_plan(
     )).first()
 
     if not training_plan:
-        raise not_authorized_token_exc("Not authorized")
+        raise not_found_exc()
 
     session.delete(training_plan)
     session.commit()
@@ -200,7 +200,7 @@ def update_training_plan(
     )).first()
 
     if not training_plan:
-        raise not_authorized_token_exc("Not authorized")
+        raise not_found_exc()
 
     training_plan.name = data.training_plan_name
     training_plan.description = data.training_plan_description
@@ -228,7 +228,7 @@ def update_training_plan(
     found_exercise_ids = {exercise.id for exercise in exercises}
 
     if not exercises_ids.issubset(found_exercise_ids):
-        raise not_authorized_token_exc("Not authorized")
+        raise not_found_exc()
 
     for index1, item1 in enumerate(data.training_units):
         new_training_unit = models.TrainingUnit(

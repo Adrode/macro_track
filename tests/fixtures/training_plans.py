@@ -197,7 +197,7 @@ def test_training_plan_second_user_1(
     test_exercise_second_user_2,
 ):
     training_plan = TrainingPlan(
-        name="Full body basics",
+        name="FBW",
         description="A short full-body workout",
         user_id=test_second_user.id,
         source="user",
