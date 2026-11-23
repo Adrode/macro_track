@@ -187,3 +187,157 @@ def test_training_plan_first_user_1(
     db_session.commit()
 
     return training_plan
+
+
+@pytest.fixture()
+def test_training_plan_second_user_1(
+    db_session,
+    test_second_user,
+    test_exercise_second_user_1,
+    test_exercise_second_user_2,
+):
+    training_plan = TrainingPlan(
+        name="Full body basics",
+        description="A short full-body workout",
+        user_id=test_second_user.id,
+        source="user",
+    )
+
+    db_session.add(training_plan)
+    db_session.flush()
+    db_session.refresh(training_plan)
+
+    training_unit_1 = TrainingUnit(
+        training_plan_id=training_plan.id,
+        name="Pull and legs",
+        unit_order=1,
+    )
+    training_unit_2 = TrainingUnit(
+        training_plan_id=training_plan.id,
+        name="Legs",
+        unit_order=2,
+    )
+    db_session.add(training_unit_1)
+    db_session.add(training_unit_2)
+    db_session.flush()
+    db_session.refresh(training_unit_1)
+    db_session.refresh(training_unit_2)
+
+    training_unit_1_training_exercise_1 = TrainingExercise(
+        training_unit_id=training_unit_1.id,
+        exercise_id=test_exercise_second_user_1.id,
+        exercise_order=1,
+    )
+    training_unit_1_training_exercise_2 = TrainingExercise(
+        training_unit_id=training_unit_1.id,
+        exercise_id=test_exercise_second_user_2.id,
+        exercise_order=2,
+    )
+    db_session.add(training_unit_1_training_exercise_1)
+    db_session.add(training_unit_1_training_exercise_2)
+    db_session.flush()
+    db_session.refresh(training_unit_1_training_exercise_1)
+    db_session.refresh(training_unit_1_training_exercise_2)
+
+    training_unit_2_training_exercise_1 = TrainingExercise(
+        training_unit_id=training_unit_2.id,
+        exercise_id=test_exercise_second_user_2.id,
+        exercise_order=1,
+    )
+    db_session.add(training_unit_2_training_exercise_1)
+    db_session.flush()
+    db_session.refresh(training_unit_2_training_exercise_1)
+
+    training_unit_1_training_exercise_1_set_1 = TrainingExerciseSet(
+        training_exercise_id=training_unit_1_training_exercise_1.id,
+        set_order=1,
+        repetitions=6,
+    )
+    training_unit_1_training_exercise_1_set_2 = TrainingExerciseSet(
+        training_exercise_id=training_unit_1_training_exercise_1.id,
+        set_order=2,
+        repetitions=6,
+    )
+    db_session.add(training_unit_1_training_exercise_1_set_1)
+    db_session.add(training_unit_1_training_exercise_1_set_2)
+
+    training_unit_1_training_exercise_2_set_1 = TrainingExerciseSet(
+        training_exercise_id=training_unit_1_training_exercise_2.id,
+        set_order=1,
+        repetitions=10,
+    )
+    training_unit_1_training_exercise_2_set_2 = TrainingExerciseSet(
+        training_exercise_id=training_unit_1_training_exercise_2.id,
+        set_order=2,
+        repetitions=10,
+    )
+    db_session.add(training_unit_1_training_exercise_2_set_1)
+    db_session.add(training_unit_1_training_exercise_2_set_2)
+
+    training_unit_2_training_exercise_1_set_1 = TrainingExerciseSet(
+        training_exercise_id=training_unit_2_training_exercise_1.id,
+        set_order=1,
+        repetitions=10,
+    )
+    training_unit_2_training_exercise_1_set_2 = TrainingExerciseSet(
+        training_exercise_id=training_unit_2_training_exercise_1.id,
+        set_order=2,
+        repetitions=10,
+    )
+    db_session.add(training_unit_2_training_exercise_1_set_1)
+    db_session.add(training_unit_2_training_exercise_1_set_2)
+    db_session.commit()
+
+    return training_plan
+
+
+@pytest.fixture()
+def test_training_plan_second_user_2(
+    db_session,
+    test_second_user,
+    test_exercise_second_user_2,
+):
+    training_plan = TrainingPlan(
+        name="Leg day",
+        description="A simple lower-body workout",
+        user_id=test_second_user.id,
+        source="user",
+    )
+
+    db_session.add(training_plan)
+    db_session.flush()
+    db_session.refresh(training_plan)
+
+    training_unit_1 = TrainingUnit(
+        training_plan_id=training_plan.id,
+        name="Lower body",
+        unit_order=1,
+    )
+    db_session.add(training_unit_1)
+    db_session.flush()
+    db_session.refresh(training_unit_1)
+
+    training_unit_1_training_exercise_1 = TrainingExercise(
+        training_unit_id=training_unit_1.id,
+        exercise_id=test_exercise_second_user_2.id,
+        exercise_order=1,
+    )
+    db_session.add(training_unit_1_training_exercise_1)
+    db_session.flush()
+    db_session.refresh(training_unit_1_training_exercise_1)
+
+    training_unit_1_training_exercise_1_set_1 = TrainingExerciseSet(
+        training_exercise_id=training_unit_1_training_exercise_1.id,
+        set_order=1,
+        repetitions=10,
+    )
+    training_unit_1_training_exercise_1_set_2 = TrainingExerciseSet(
+        training_exercise_id=training_unit_1_training_exercise_1.id,
+        set_order=2,
+        repetitions=8,
+    )
+    db_session.add(training_unit_1_training_exercise_1_set_1)
+    db_session.add(training_unit_1_training_exercise_1_set_2)
+    db_session.commit()
+
+    return training_plan
