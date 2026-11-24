@@ -1,3 +1,5 @@
+from models.models import TrainingPlan
+
 def test_create_training_plan_valid_data(
     client,
     authenticate_first_user,
@@ -112,28 +114,147 @@ def test_create_training_plan_exercise_owned_by_other_user(
                                 {
                                     "repetitions": 10,
                                 },
-                                {
-                                    "repetitions": 8
-                                },
+                                {"repetitions": 8},
                             ],
                         },
                     ],
                 },
             ],
         },
-        headers=authenticate_first_user
+        headers=authenticate_first_user,
     )
 
     assert response.status_code == 404
 
 
-def test_create_training_plan_empty_data(
-    client, authenticate_first_user
-):
+def test_create_training_plan_empty_data(client, authenticate_first_user):
     response = client.post(
-        "/user/training-plans/",
-        json={},
-        headers=authenticate_first_user
+        "/user/training-plans/", json={}, headers=authenticate_first_user
     )
 
     assert response.status_code == 422
+
+
+def test_get_training_plan_valid_data(
+    client, authenticate_first_user, test_training_plan_first_user_1
+):
+    response = client.get(
+        f"/user/training-plans/{test_training_plan_first_user_1.id}",
+        headers=authenticate_first_user,
+    )
+
+    training_units = response.json()["training_units"]
+    training_exercises = [
+        exercise for unit in training_units for exercise in unit["training_exercises"]
+    ]
+    training_exercise_sets = [
+        exercise["sets"]
+        for unit in training_units
+        for exercise in unit["training_exercises"]
+    ]
+
+    exercises_names = set()
+    for item in training_exercises:
+        exercises_names.add(item["exercise_name"])
+
+    assert response.status_code == 200
+    assert response.json()["training_plan_name"] == "PPL"
+    assert len(training_units) == 3
+    assert {"Push ups", "Lat pulldowns", "Leg extensions"}.issubset(exercises_names)
+    assert len(training_exercise_sets) == 5
+
+
+def test_get_training_plan_unauthorized(client, test_training_plan_first_user_1):
+    response = client.get(f"/user/training-plans/{test_training_plan_first_user_1.id}")
+
+    assert response.status_code == 401
+
+
+def test_get_training_plan_does_not_exist(client, authenticate_first_user):
+    response = client.get("/user/training-plans/0", headers=authenticate_first_user)
+
+    assert response.status_code == 404
+
+
+def test_get_training_plan_owned_by_other_user(
+    client, authenticate_first_user, test_training_plan_second_user_1
+):
+    response = client.get(
+        f"/user/training-plans/{test_training_plan_second_user_1}",
+        headers=authenticate_first_user,
+    )
+
+    assert response.status_code == 404
+
+
+def test_get_training_plan_empty_units(
+    client, db_session, authenticate_first_user, test_first_user
+):
+    new_training_plan = TrainingPlan(
+        name="PPL",
+        user_id=test_first_user.id,
+        source="user"
+    )
+
+    db_session.add(new_training_plan)
+    db_session.commit()
+    db_session.refresh(new_training_plan)
+    
+    response = client.get(
+        f"/user/training-plans/{new_training_plan.id}",
+        headers=authenticate_first_user,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["training_units"] == []
+
+
+def test_get_training_plans_valid_data(
+    client, authenticate_second_user, test_training_plan_second_user_1, test_training_plan_second_user_2
+):
+    response = client.get(
+        "/user/training-plans/",
+        headers=authenticate_second_user
+    )
+
+    training_plan_names = set()
+    for item in response.json():
+        training_plan_names.add(item["training_plan_name"])
+
+    assert response.status_code == 200
+    assert len(response.json()) == 2
+    assert {"FBW", "Leg day"}.issubset(training_plan_names)
+
+
+def test_get_training_plans_unauthorized(
+    client, test_training_plan_second_user_1, test_training_plan_second_user_2
+):
+    response = client.get(
+        "/user/training-plans/"
+    )
+
+    assert response.status_code == 401
+
+
+def test_get_training_plans_does_not_exist(
+    client, authenticate_second_user
+):
+    response = client.get(
+        "/user/training-plans/",
+        headers=authenticate_second_user
+    )
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_get_training_plans_owned_by_other_user(
+    client, authenticate_second_user, test_training_plan_first_user_1
+):
+    response = client.get(
+        "/user/training-plans/",
+        headers=authenticate_second_user
+    )
+
+    assert response.status_code == 200
+    assert response.json() == []
