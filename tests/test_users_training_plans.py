@@ -1,5 +1,6 @@
 from models.models import TrainingPlan
 
+
 def test_create_training_plan_valid_data(
     client,
     authenticate_first_user,
@@ -180,7 +181,7 @@ def test_get_training_plan_owned_by_other_user(
     client, authenticate_first_user, test_training_plan_second_user_1
 ):
     response = client.get(
-        f"/user/training-plans/{test_training_plan_second_user_1}",
+        f"/user/training-plans/{test_training_plan_second_user_1.id}",
         headers=authenticate_first_user,
     )
 
@@ -191,15 +192,13 @@ def test_get_training_plan_empty_units(
     client, db_session, authenticate_first_user, test_first_user
 ):
     new_training_plan = TrainingPlan(
-        name="PPL",
-        user_id=test_first_user.id,
-        source="user"
+        name="PPL", user_id=test_first_user.id, source="user"
     )
 
     db_session.add(new_training_plan)
     db_session.commit()
     db_session.refresh(new_training_plan)
-    
+
     response = client.get(
         f"/user/training-plans/{new_training_plan.id}",
         headers=authenticate_first_user,
@@ -210,12 +209,12 @@ def test_get_training_plan_empty_units(
 
 
 def test_get_training_plans_valid_data(
-    client, authenticate_second_user, test_training_plan_second_user_1, test_training_plan_second_user_2
+    client,
+    authenticate_second_user,
+    test_training_plan_second_user_1,
+    test_training_plan_second_user_2,
 ):
-    response = client.get(
-        "/user/training-plans/",
-        headers=authenticate_second_user
-    )
+    response = client.get("/user/training-plans/", headers=authenticate_second_user)
 
     training_plan_names = set()
     for item in response.json():
@@ -229,20 +228,13 @@ def test_get_training_plans_valid_data(
 def test_get_training_plans_unauthorized(
     client, test_training_plan_second_user_1, test_training_plan_second_user_2
 ):
-    response = client.get(
-        "/user/training-plans/"
-    )
+    response = client.get("/user/training-plans/")
 
     assert response.status_code == 401
 
 
-def test_get_training_plans_does_not_exist(
-    client, authenticate_second_user
-):
-    response = client.get(
-        "/user/training-plans/",
-        headers=authenticate_second_user
-    )
+def test_get_training_plans_does_not_exist(client, authenticate_second_user):
+    response = client.get("/user/training-plans/", headers=authenticate_second_user)
 
     assert response.status_code == 200
     assert response.json() == []
@@ -251,10 +243,80 @@ def test_get_training_plans_does_not_exist(
 def test_get_training_plans_owned_by_other_user(
     client, authenticate_second_user, test_training_plan_first_user_1
 ):
+    response = client.get("/user/training-plans/", headers=authenticate_second_user)
+
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_delete_training_plan_valid_data(
+    client,
+    authenticate_second_user,
+    test_training_plan_second_user_1,
+    test_training_plan_second_user_2,
+):
     response = client.get(
         "/user/training-plans/",
         headers=authenticate_second_user
     )
 
     assert response.status_code == 200
-    assert response.json() == []
+    assert len(response.json()) == 2
+
+    response = client.delete(
+        f"/user/training-plans/{test_training_plan_second_user_1.id}",
+        headers=authenticate_second_user
+    )
+
+    assert response.status_code == 200
+    assert f"ID {test_training_plan_second_user_1.id}" in response.json()["detail"]
+
+    response = client.get(
+        "/user/training-plans/",
+        headers=authenticate_second_user
+    )
+
+    assert response.status_code == 200
+    assert len(response.json()) == 1
+    training_plan_ids = set()
+    for item in response.json():
+        training_plan_ids.add(item["training_plan_id"])
+    
+    assert test_training_plan_second_user_1.id not in training_plan_ids
+
+
+def test_delete_training_plan_unauthorized(
+    client,
+    test_training_plan_second_user_1,
+    test_training_plan_second_user_2,
+):
+    response = client.delete(
+        f"/user/training-plans/{test_training_plan_second_user_1.id}"
+    )
+
+    assert response.status_code == 401
+
+
+def test_delete_training_plan_does_not_exist(
+    client,
+    authenticate_second_user
+):
+    response = client.delete(
+        "/user/training-plans/0",
+        headers=authenticate_second_user
+    )
+
+    assert response.status_code == 404
+
+
+def test_delete_training_plan_owned_by_other_user(
+    client,
+    authenticate_first_user,
+    test_training_plan_second_user_1
+):
+    response = client.delete(
+        f"/user/training-plans/{test_training_plan_second_user_1.id}",
+        headers=authenticate_first_user
+    )
+
+    assert response.status_code == 404
