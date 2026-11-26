@@ -255,33 +255,27 @@ def test_delete_training_plan_valid_data(
     test_training_plan_second_user_1,
     test_training_plan_second_user_2,
 ):
-    response = client.get(
-        "/user/training-plans/",
-        headers=authenticate_second_user
-    )
+    response = client.get("/user/training-plans/", headers=authenticate_second_user)
 
     assert response.status_code == 200
     assert len(response.json()) == 2
 
     response = client.delete(
         f"/user/training-plans/{test_training_plan_second_user_1.id}",
-        headers=authenticate_second_user
+        headers=authenticate_second_user,
     )
 
     assert response.status_code == 200
     assert f"ID {test_training_plan_second_user_1.id}" in response.json()["detail"]
 
-    response = client.get(
-        "/user/training-plans/",
-        headers=authenticate_second_user
-    )
+    response = client.get("/user/training-plans/", headers=authenticate_second_user)
 
     assert response.status_code == 200
     assert len(response.json()) == 1
     training_plan_ids = set()
     for item in response.json():
         training_plan_ids.add(item["training_plan_id"])
-    
+
     assert test_training_plan_second_user_1.id not in training_plan_ids
 
 
@@ -297,25 +291,221 @@ def test_delete_training_plan_unauthorized(
     assert response.status_code == 401
 
 
-def test_delete_training_plan_does_not_exist(
-    client,
-    authenticate_second_user
-):
-    response = client.delete(
-        "/user/training-plans/0",
-        headers=authenticate_second_user
-    )
+def test_delete_training_plan_does_not_exist(client, authenticate_second_user):
+    response = client.delete("/user/training-plans/0", headers=authenticate_second_user)
 
     assert response.status_code == 404
 
 
 def test_delete_training_plan_owned_by_other_user(
+    client, authenticate_first_user, test_training_plan_second_user_1
+):
+    response = client.delete(
+        f"/user/training-plans/{test_training_plan_second_user_1.id}",
+        headers=authenticate_first_user,
+    )
+
+    assert response.status_code == 404
+
+
+def test_update_training_plan_valid_data(
+    client,
+    authenticate_first_user,
+    test_training_plan_first_user_1,
+    test_exercise_first_user_2,
+):
+    response = client.put(
+        f"/user/training-plans/{test_training_plan_first_user_1.id}",
+        json={
+            "training_plan_name": "Updated TP",
+            "training_units": [
+                {
+                    "training_unit_name": "Updated unit 1",
+                    "training_unit_description": "Updated Unit 1 description",
+                    "training_exercises": [
+                        {
+                            "exercise_id": test_exercise_first_user_2.id,
+                            "sets": [
+                                {
+                                    "repetitions": 10,
+                                },
+                                {
+                                    "repetitions": 6
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        },
+        headers=authenticate_first_user
+    )
+
+    assert response.status_code == 200
+    assert response.json()["training_plan_name"] == "Updated TP"
+    assert response.json()["training_plan_description"] == None
+
+    response = client.get(
+        f"/user/training-plans/{test_training_plan_first_user_1.id}",
+        headers=authenticate_first_user
+    )
+
+    units_names = []
+    exercises_names = []
+    sets_count = 0
+    for unit in response.json()["training_units"]:
+        units_names.append(unit["training_unit_name"])
+        for exercise in unit["training_exercises"]:
+            exercises_names.append(exercise["exercise_name"])
+            for exercise_set in exercise["sets"]:
+                sets_count = sets_count + len(exercise_set)
+    assert "Updated unit 1" in units_names
+    assert len(units_names) == 1
+    assert "Lat pulldowns" in exercises_names
+    assert len(exercises_names) == 1
+    assert sets_count == 2
+
+
+def test_update_training_plan_invalid_data(
+    client,
+    authenticate_first_user,
+    test_training_plan_first_user_1
+):
+    response = client.put(
+        f"/user/training-plans/{test_training_plan_first_user_1.id}",
+        json={
+            "training_plan_name": 15,
+            "training_units": [],
+        },
+        headers=authenticate_first_user
+    )
+
+    assert response.status_code == 422
+
+
+def test_update_training_plan_unauthorized(
+    client,
+    test_training_plan_first_user_1,
+    test_exercise_first_user_2,
+):
+    response = client.put(
+        f"/user/training-plans/{test_training_plan_first_user_1.id}",
+        json={
+            "training_plan_name": "Updated TP",
+            "training_units": [
+                {
+                    "training_unit_name": "Updated unit 1",
+                    "training_unit_description": "Updated Unit 1 description",
+                    "training_exercises": [
+                        {
+                            "exercise_id": test_exercise_first_user_2.id,
+                            "sets": [
+                                {
+                                    "repetitions": 10,
+                                },
+                                {
+                                    "repetitions": 6
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        }
+    )
+
+    assert response.status_code == 401
+
+
+def test_update_training_plan_exercises_owned_by_other_user(
+    client,
+    authenticate_first_user,
+    test_training_plan_first_user_1,
+    test_exercise_second_user_1,
+):
+    response = client.put(
+        f"/user/training-plans/{test_training_plan_first_user_1.id}",
+        json={
+            "training_plan_name": "Updated TP",
+            "training_units": [
+                {
+                    "training_unit_name": "Updated unit 1",
+                    "training_unit_description": "Updated Unit 1 description",
+                    "training_exercises": [
+                        {
+                            "exercise_id": test_exercise_second_user_1.id,
+                            "sets": [
+                                {
+                                    "repetitions": 10,
+                                },
+                                {
+                                    "repetitions": 6
+                                },
+                            ],
+                        },
+                    ],
+                },
+            ],
+        },
+        headers=authenticate_first_user
+    )
+
+    assert response.status_code == 404
+
+
+def test_update_training_plan_empty_units(
+    client,
+    authenticate_first_user,
+    test_training_plan_first_user_1
+):
+    response = client.put(
+        f"/user/training-plans/{test_training_plan_first_user_1.id}",
+        json={
+            "training_plan_name": "Updated TP",
+            "training_units": [],
+        },
+        headers=authenticate_first_user
+    )
+
+    assert response.status_code == 200
+    assert response.json()["training_plan_name"] == "Updated TP"
+
+    response = client.get(
+        f"/user/training-plans/{test_training_plan_first_user_1.id}",
+        headers=authenticate_first_user
+    )
+
+    assert response.status_code == 200
+    assert response.json()["training_units"] == []
+
+
+def test_update_training_plan_does_not_exist(
+    client,
+    authenticate_first_user
+):
+    response = client.put(
+        "/user/training-plans/0",
+        json={
+            "training_plan_name": "Updated TP",
+            "training_units": [],
+        },
+        headers=authenticate_first_user
+    )
+
+    assert response.status_code == 404
+
+
+def test_update_training_plan_owned_by_other_user(
     client,
     authenticate_first_user,
     test_training_plan_second_user_1
 ):
-    response = client.delete(
+    response = client.put(
         f"/user/training-plans/{test_training_plan_second_user_1.id}",
+        json={
+            "training_plan_name": "Updated TP",
+            "training_units": [],
+        },
         headers=authenticate_first_user
     )
 

@@ -206,6 +206,10 @@ def update_training_plan(
     training_plan.description = data.training_plan_description
 
     for unit in training_plan.training_units:
+        for exercise in unit.training_exercises:
+            for exercise_set in exercise.sets:
+                session.delete(exercise_set)
+            session.delete(exercise)
         session.delete(unit)
     session.flush()
 
